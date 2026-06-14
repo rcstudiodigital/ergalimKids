@@ -1,0 +1,28 @@
+# Dependências
+node_modules/
+
+# Build
+dist/
+build/
+
+# NUNCA commitar — contém senhas e chaves secretas
+.env
+.env.local
+.env.example
+.env.development.local
+.env.test.local
+.env.production.local
+.env.production
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/
+.idea/
+*.swp

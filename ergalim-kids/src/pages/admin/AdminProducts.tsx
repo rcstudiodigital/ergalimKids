@@ -1,0 +1,151 @@
+import React, { useState } from 'react'
+import { Plus, Pencil, Trash2, Search, Eye, EyeOff, Star } from 'lucide-react'
+import { useStore } from '@/context/StoreContext'
+import type { Product } from '@/types'
+import { formatCurrency, genId } from '@/utils/security'
+import toast from 'react-hot-toast'
+
+const EMPTY_PRODUCT: Omit<Product,'id'|'createdAt'|'updatedAt'> = {
+  name:'', description:'', price:0, images:[''], category:'Feminino',
+  variants:[{ size:'', color:'', stock:0, sku:'' }], tags:[], featured:false, active:true
+}
+
+export default function AdminProducts() {
+  const { products, updateProduct, deleteProduct, addProduct } = useStore()
+  const [search, setSearch] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [editProduct, setEditProduct] = useState<Product | null>(null)
+  const [form, setForm] = useState<typeof EMPTY_PRODUCT>({...EMPTY_PRODUCT})
+
+  const filtered = products.filter(p =>
+    p.name.toLowerCase().includes(search.toLowerCase()) ||
+    p.category.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const openNew = () => { setForm({...EMPTY_PRODUCT}); setEditProduct(null); setShowForm(true) }
+  const openEdit = (p: Product) => {
+    setForm({ name:p.name, description:p.description, price:p.price, originalPrice:p.originalPrice, images:p.images, category:p.category, subcategory:p.subcategory, variants:p.variants, tags:p.tags, featured:p.featured, active:p.active })
+    setEditProduct(p); setShowForm(true)
+  }
+
+  const handleSave = () => {
+    if (!form.name.trim()) { toast.error('Nome do produto é obrigatório'); return }
+    if (form.price <= 0)   { toast.error('Preço deve ser maior que zero'); return }
+    if (editProduct) { updateProduct({ ...editProduct, ...form, updatedAt: new Date().toISOString() }); toast.success('Produto atualizado!') }
+    else             { addProduct(form); toast.success('Produto adicionado!') }
+    setShowForm(false)
+  }
+
+  const toggleActive = (p: Product) => { updateProduct({...p, active:!p.active}); toast.success(p.active ? 'Produto desativado' : 'Produto ativado') }
+  const toggleFeatured = (p: Product) => { updateProduct({...p, featured:!p.featured}); toast.success(p.featured ? 'Removido dos destaques' : 'Adicionado aos destaques') }
+  const handleDelete = (p: Product) => {
+    if (!confirm(`Excluir "${p.name}"?`)) return
+    deleteProduct(p.id); toast.success('Produto removido')
+  }
+
+  return (
+    <div className="space-y-5 animate-fadeUp">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-black text-navy">Produtos</h1>
+          <p className="text-sm text-gray-400 mt-0.5">{products.length} produtos · {products.filter(p=>p.active).length} ativos</p>
+        </div>
+        <button onClick={openNew} className="btn-pink"><Plus size={16}/> Novo produto</button>
+      </div>
+
+      <div className="relative max-w-sm">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
+        <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar produto..." className="input-field pl-9 py-2"/>
+      </div>
+
+      <div className="card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr className="text-xs text-gray-500 font-bold border-b border-gray-100">
+                <th className="text-left px-4 py-3">Produto</th><th className="text-left px-4 py-3">Cat.</th>
+                <th className="text-left px-4 py-3">Preço</th><th className="text-left px-4 py-3">Estoque</th>
+                <th className="text-left px-4 py-3">Status</th><th className="text-right px-4 py-3">Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map(p => {
+                const totalStock = p.variants.reduce((a,v)=>a+v.stock,0)
+                return (
+                  <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-xl object-cover bg-gray-100"/>
+                        <div>
+                          <p className="font-bold text-navy text-sm line-clamp-1">{p.name}</p>
+                          <p className="text-xs text-gray-400">{p.variants.length} variantes</p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600 text-xs">{p.category}</td>
+                    <td className="px-4 py-3">
+                      <span className="font-black text-navy">{formatCurrency(p.price)}</span>
+                      {p.originalPrice && <span className="block text-xs text-gray-400 line-through">{formatCurrency(p.originalPrice)}</span>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`font-bold text-sm ${totalStock===0?'text-red-500':totalStock<=5?'text-amber-500':'text-green-600'}`}>{totalStock} un.</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`badge ${p.active?'badge-green':'badge-gray'}`}>{p.active?'Ativo':'Inativo'}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={()=>toggleFeatured(p)} className={`btn-ghost p-1.5 ${p.featured?'text-star':''}`} title="Destaque"><Star size={14} fill={p.featured?'currentColor':'none'}/></button>
+                        <button onClick={()=>toggleActive(p)} className="btn-ghost p-1.5" title={p.active?'Desativar':'Ativar'}>{p.active?<EyeOff size={14}/>:<Eye size={14}/>}</button>
+                        <button onClick={()=>openEdit(p)} className="btn-ghost p-1.5"><Pencil size={14}/></button>
+                        <button onClick={()=>handleDelete(p)} className="btn-ghost p-1.5 hover:text-red-500"><Trash2 size={14}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Modal Produto */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
+          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp">
+            <div className="flex items-center justify-between p-5 border-b border-gray-100">
+              <h2 className="font-black text-navy">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
+              <button onClick={()=>setShowForm(false)} className="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
+            </div>
+            <div className="p-5 space-y-3">
+              <div><label className="text-xs font-bold text-gray-500 block mb-1">Nome *</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} className="input-field" placeholder="Nome do produto"/></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><label className="text-xs font-bold text-gray-500 block mb-1">Preço *</label><input type="number" step="0.01" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:parseFloat(e.target.value)||0}))} className="input-field"/></div>
+                <div><label className="text-xs font-bold text-gray-500 block mb-1">Preço original</label><input type="number" step="0.01" min="0" value={form.originalPrice||''} onChange={e=>setForm(f=>({...f,originalPrice:parseFloat(e.target.value)||undefined}))} className="input-field" placeholder="(opcional)"/></div>
+              </div>
+              <div><label className="text-xs font-bold text-gray-500 block mb-1">Categoria</label>
+                <select value={form.category} onChange={e=>setForm(f=>({...f,category:e.target.value as any}))} className="input-field">
+                  <option>Feminino</option><option>Masculino</option><option>Unissex</option>
+                </select>
+              </div>
+              <div><label className="text-xs font-bold text-gray-500 block mb-1">URL da imagem principal</label><input value={form.images[0]} onChange={e=>setForm(f=>({...f,images:[e.target.value,...f.images.slice(1)]}))} className="input-field" placeholder="https://..."/></div>
+              <div><label className="text-xs font-bold text-gray-500 block mb-1">Descrição</label><textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} rows={3} className="input-field resize-none"/></div>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
+                  <input type="checkbox" checked={form.featured} onChange={e=>setForm(f=>({...f,featured:e.target.checked}))} className="rounded accent-pink w-4 h-4"/> Destaque
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
+                  <input type="checkbox" checked={form.active} onChange={e=>setForm(f=>({...f,active:e.target.checked}))} className="rounded accent-pink w-4 h-4"/> Ativo
+                </label>
+              </div>
+            </div>
+            <div className="flex gap-3 p-5 border-t border-gray-100">
+              <button onClick={()=>setShowForm(false)} className="btn-outline flex-1">Cancelar</button>
+              <button onClick={handleSave} className="btn-pink flex-1">Salvar produto</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
