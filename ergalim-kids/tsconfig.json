@@ -12,9 +12,12 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "strict": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noImplicitAny": false,
     "baseUrl": ".",
     "paths": { "@/*": ["./src/*"] },
-    "types": ["vite/client"]
+    "ignoreDeprecations": "6.0"
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

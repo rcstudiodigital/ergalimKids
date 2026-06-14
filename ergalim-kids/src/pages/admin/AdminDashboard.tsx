@@ -5,7 +5,12 @@ import { useStore } from '@/context/StoreContext'
 import { formatCurrency, formatDate } from '@/utils/security'
 
 const STATUS_LABELS: Record<string, { label: string; cls: string }> = {
-  pending:'badge-amber',paid:'badge-navy',processing:'badge-navy',shipped:'badge-green',delivered:'badge-green',cancelled:'badge-red'
+  pending:    { label: 'Pendente',   cls: 'badge-amber' },
+  paid:       { label: 'Pago',       cls: 'badge-navy'  },
+  processing: { label: 'Preparando', cls: 'badge-navy'  },
+  shipped:    { label: 'Enviado',    cls: 'badge-green' },
+  delivered:  { label: 'Entregue',   cls: 'badge-green' },
+  cancelled:  { label: 'Cancelado',  cls: 'badge-red'   },
 }
 
 export default function AdminDashboard() {
