@@ -43,7 +43,7 @@ export default function AdminOrders() {
     <div className="space-y-6 animate-fadeUp">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-navy">Pedidos</h1>
+          <h1 className="text-2xl font-black text-brand-navy">Pedidos</h1>
           <p className="text-sm text-gray-400 mt-0.5">{orders.length} pedidos · {orders.filter(o=>o.status==='pending').length} pendentes</p>
         </div>
       </div>
@@ -66,13 +66,13 @@ export default function AdminOrders() {
           <div key={order.id} className="card p-5">
             <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
               <div>
-                <p className="font-black text-pink">{order.id}</p>
-                <p className="text-sm font-bold text-navy">{order.customerName}</p>
+                <p className="font-black text-brand-pink">{order.id}</p>
+                <p className="text-sm font-bold text-brand-navy">{order.customerName}</p>
                 <p className="text-xs text-gray-400">{order.customerEmail} · {formatDate(order.createdAt)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span className={`badge ${BADGE[order.status] || 'badge-gray'}`}>{STATUS_OPTS.find(s=>s.value===order.status)?.label}</span>
-                <span className="font-black text-navy">{formatCurrency(order.total)}</span>
+                <span className="font-black text-brand-navy">{formatCurrency(order.total)}</span>
               </div>
             </div>
 
@@ -80,7 +80,7 @@ export default function AdminOrders() {
               {order.items.map((item,i) => (
                 <div key={i} className="shrink-0 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-1.5">
                   <img src={item.productImage} alt="" className="w-8 h-8 rounded-lg object-cover"/>
-                  <div className="text-xs"><p className="font-bold text-navy line-clamp-1 max-w-[100px]">{item.productName}</p><p className="text-gray-400">{item.size} · ×{item.quantity}</p></div>
+                  <div className="text-xs"><p className="font-bold text-brand-navy line-clamp-1 max-w-[100px]">{item.productName}</p><p className="text-gray-400">{item.size} · ×{item.quantity}</p></div>
                 </div>
               ))}
             </div>
@@ -88,7 +88,7 @@ export default function AdminOrders() {
             <div className="flex flex-wrap gap-2 items-center">
               {/* Mudar status */}
               <select value={order.status} onChange={e=>handleStatus(order.id, e.target.value as OrderStatus)}
-                className="text-xs border-2 border-gray-200 rounded-lg px-2 py-1.5 font-bold focus:border-pink focus:outline-none">
+                className="text-xs border-2 border-gray-200 rounded-lg px-2 py-1.5 font-bold focus:border-brand-pink focus:outline-none">
                 {STATUS_OPTS.filter(o=>o.value!=='all').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
 
@@ -99,9 +99,9 @@ export default function AdminOrders() {
                     placeholder="Código de rastreio (opcional)"
                     value={trackingInputs[order.id] || ''}
                     onChange={e=>setTrackingInputs(t=>({...t,[order.id]:e.target.value}))}
-                    className="text-xs border-2 border-gray-200 rounded-lg px-3 py-1.5 focus:border-pink focus:outline-none w-48"
+                    className="text-xs border-2 border-gray-200 rounded-lg px-3 py-1.5 focus:border-brand-pink focus:outline-none w-48"
                   />
-                  <button onClick={()=>handleShipped(order.id)} className="btn-pink py-1.5 px-3 text-xs">✅ Marcar Enviado</button>
+                  <button onClick={()=>handleShipped(order.id)} className="btn-primary py-1.5 px-3 text-xs">✅ Marcar Enviado</button>
                 </div>
               )}
 

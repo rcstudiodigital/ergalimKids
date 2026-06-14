@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Plus, Pencil, Trash2, Search, Eye, EyeOff, Star } from 'lucide-react'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { useStore } from '@/context/StoreContext'
 import type { Product } from '@/types'
 import { formatCurrency, genId } from '@/utils/security'
@@ -47,10 +48,10 @@ export default function AdminProducts() {
     <div className="space-y-5 animate-fadeUp">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-navy">Produtos</h1>
+          <h1 className="text-2xl font-black text-brand-navy">Produtos</h1>
           <p className="text-sm text-gray-400 mt-0.5">{products.length} produtos · {products.filter(p=>p.active).length} ativos</p>
         </div>
-        <button onClick={openNew} className="btn-pink"><Plus size={16}/> Novo produto</button>
+        <button onClick={openNew} className="btn-primary"><Plus size={16}/> Novo produto</button>
       </div>
 
       <div className="relative max-w-sm">
@@ -77,14 +78,14 @@ export default function AdminProducts() {
                       <div className="flex items-center gap-3">
                         <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-xl object-cover bg-gray-100"/>
                         <div>
-                          <p className="font-bold text-navy text-sm line-clamp-1">{p.name}</p>
+                          <p className="font-bold text-brand-navy text-sm line-clamp-1">{p.name}</p>
                           <p className="text-xs text-gray-400">{p.variants.length} variantes</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-600 text-xs">{p.category}</td>
                     <td className="px-4 py-3">
-                      <span className="font-black text-navy">{formatCurrency(p.price)}</span>
+                      <span className="font-black text-brand-navy">{formatCurrency(p.price)}</span>
                       {p.originalPrice && <span className="block text-xs text-gray-400 line-through">{formatCurrency(p.originalPrice)}</span>}
                     </td>
                     <td className="px-4 py-3">
@@ -114,7 +115,7 @@ export default function AdminProducts() {
         <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
           <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h2 className="font-black text-navy">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
+              <h2 className="font-black text-brand-navy">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
               <button onClick={()=>setShowForm(false)} className="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
             </div>
             <div className="p-5 space-y-3">
@@ -128,7 +129,13 @@ export default function AdminProducts() {
                   <option>Feminino</option><option>Masculino</option><option>Unissex</option>
                 </select>
               </div>
-              <div><label className="text-xs font-bold text-gray-500 block mb-1">URL da imagem principal</label><input value={form.images[0]} onChange={e=>setForm(f=>({...f,images:[e.target.value,...f.images.slice(1)]}))} className="input-field" placeholder="https://..."/></div>
+              <div>
+                <ImageUpload
+                  label="Imagem principal do produto"
+                  value={form.images[0] || ''}
+                  onChange={url => setForm(f => ({...f, images: [url, ...f.images.slice(1)]}))}
+                />
+              </div>
               <div><label className="text-xs font-bold text-gray-500 block mb-1">Descrição</label><textarea value={form.description} onChange={e=>setForm(f=>({...f,description:e.target.value}))} rows={3} className="input-field resize-none"/></div>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold">
@@ -141,7 +148,7 @@ export default function AdminProducts() {
             </div>
             <div className="flex gap-3 p-5 border-t border-gray-100">
               <button onClick={()=>setShowForm(false)} className="btn-outline flex-1">Cancelar</button>
-              <button onClick={handleSave} className="btn-pink flex-1">Salvar produto</button>
+              <button onClick={handleSave} className="btn-primary flex-1">Salvar produto</button>
             </div>
           </div>
         </div>

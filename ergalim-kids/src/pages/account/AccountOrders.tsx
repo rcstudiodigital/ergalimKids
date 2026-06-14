@@ -25,14 +25,14 @@ export default function AccountOrders() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">
-      <h1 className="text-2xl font-black text-navy mb-6">Meus Pedidos</h1>
+      <h1 className="text-2xl font-black text-brand-navy mb-6">Meus Pedidos</h1>
 
       {myOrders.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <Package size={48} className="mx-auto mb-4 opacity-20" />
           <p className="text-lg font-semibold mb-2">Nenhum pedido ainda</p>
           <p className="text-sm mb-6">Explore nossa coleção e faça seu primeiro pedido!</p>
-          <Link to="/shop" className="btn-pink">Ver coleção</Link>
+          <Link to="/shop" className="btn-primary">Ver coleção</Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -42,7 +42,7 @@ export default function AccountOrders() {
               <div key={order.id} className="card p-5">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    <p className="font-black text-navy text-sm">Pedido {order.id}</p>
+                    <p className="font-black text-brand-navy text-sm">Pedido {order.id}</p>
                     <p className="text-xs text-gray-400 mt-0.5">{formatDate(order.createdAt)}</p>
                   </div>
                   <span className={st.cls + ' badge'}>{st.label}</span>
@@ -59,12 +59,12 @@ export default function AccountOrders() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-xs text-gray-500">{order.items.length} {order.items.length === 1 ? 'item' : 'itens'}</p>
-                    <p className="font-black text-navy">{formatCurrency(order.total)}</p>
+                    <p className="font-black text-brand-navy">{formatCurrency(order.total)}</p>
                   </div>
                   {order.trackingCode && (
                     <div className="text-right">
                       <p className="text-xs text-gray-400">Código de rastreio</p>
-                      <p className="text-xs font-bold text-navy font-mono">{order.trackingCode}</p>
+                      <p className="text-xs font-bold text-brand-navy font-mono">{order.trackingCode}</p>
                     </div>
                   )}
                 </div>

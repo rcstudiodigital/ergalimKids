@@ -41,7 +41,7 @@ export default function AdminFinancial() {
       {/* KPIs */}
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label:'Receita Total (7 meses)', value: formatCurrency(totalRevenue + 181540), icon: DollarSign, color:'text-pink', bg:'bg-pink/10', change:'+12.4%', up:true },
+          { label:'Receita Total (7 meses)', value: formatCurrency(totalRevenue + 181540), icon: DollarSign, color:'text-brand-pink', bg:'bg-brand-pink/10', change:'+12.4%', up:true },
           { label:'Mês Atual', value: formatCurrency(currentMonth), icon: TrendingUp, color:'text-green-400', bg:'bg-green-400/10', change:`${growth}% vs mês anterior`, up: Number(growth) >= 0 },
           { label:'Ticket Médio', value: formatCurrency(200.85), icon: ShoppingBag, color:'text-blue-400', bg:'bg-blue-400/10', change:`${orders.length} pedidos`, up:true },
           { label:'A Receber (Pendentes)', value: formatCurrency(orders.filter(o=>o.status==='pending').reduce((a,o)=>a+o.total,0)), icon: DollarSign, color:'text-amber-400', bg:'bg-amber-400/10', change:'Aguardando pagamento', up:false },
@@ -69,7 +69,7 @@ export default function AdminFinancial() {
             <div key={MONTHS[i]} className="flex-1 flex flex-col items-center gap-2">
               <span className="text-xs text-gray-400 font-semibold">{formatCurrency(r).replace('R$\u00a0','R$')}</span>
               <div
-                className={`w-full rounded-t-lg transition-all duration-500 ${i === REVENUE.length-1 ? 'bg-pink' : 'bg-gray-700 hover:bg-gray-600'}`}
+                className={`w-full rounded-t-lg transition-all duration-500 ${i === REVENUE.length-1 ? 'bg-brand-pink' : 'bg-gray-700 hover:bg-gray-600'}`}
                 style={{ height:`${(r/maxRev)*100}%`, minHeight:'8px' }}
                 title={`${MONTHS[i]}: ${formatCurrency(r)}`}
               />
@@ -90,7 +90,7 @@ export default function AdminFinancial() {
             {orders.slice(0,5).map(o => (
               <div key={o.id} className="flex items-center justify-between px-5 py-3">
                 <div>
-                  <p className="text-sm font-bold text-pink">{o.id}</p>
+                  <p className="text-sm font-bold text-brand-pink">{o.id}</p>
                   <p className="text-xs text-gray-400">{o.customerName} · {formatDate(o.createdAt)}</p>
                 </div>
                 <span className="font-black text-white">{formatCurrency(o.total)}</span>
@@ -108,13 +108,13 @@ export default function AdminFinancial() {
             {TOP_PRODUCTS.map((p, i) => (
               <div key={p.name} className="flex items-center justify-between px-5 py-3">
                 <div className="flex items-center gap-3">
-                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-pink text-white' : 'bg-gray-800 text-gray-400'}`}>{i+1}</span>
+                  <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-black ${i === 0 ? 'bg-brand-pink text-white' : 'bg-gray-800 text-gray-400'}`}>{i+1}</span>
                   <div>
                     <p className="text-sm font-bold text-white">{p.name}</p>
                     <p className="text-xs text-gray-500">{p.sales} vendas</p>
                   </div>
                 </div>
-                <span className="font-black text-pink">{formatCurrency(p.revenue)}</span>
+                <span className="font-black text-brand-pink">{formatCurrency(p.revenue)}</span>
               </div>
             ))}
           </div>

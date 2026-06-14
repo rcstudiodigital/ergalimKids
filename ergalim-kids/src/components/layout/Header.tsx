@@ -121,7 +121,7 @@ export default function Header() {
                           <Package size={15} className="text-brand-pink"/> Painel da Loja
                         </Link>
                       )}
-                      <Link to="/account/orders" className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-brand-navy hover:bg-bg-soft rounded-2xl mx-1">
+                      <Link to="/account" className="flex items-center gap-2 px-4 py-2.5 text-sm font-bold text-brand-navy hover:bg-bg-soft rounded-2xl mx-1">
                         <Package size={15} className="text-brand-pink"/> Meus Pedidos
                       </Link>
                       <button onClick={logout}

@@ -70,7 +70,7 @@ export default function OwnerOrders() {
   return (
     <div className="space-y-6 animate-fadeUp">
       <div>
-        <h1 className="text-2xl font-black text-navy">Pedidos</h1>
+        <h1 className="text-2xl font-black text-brand-navy">Pedidos</h1>
         <div className="flex gap-4 mt-2">
           <span className="text-sm text-gray-500">{orders.length} pedidos no total</span>
           {pending > 0 && <span className="badge badge-amber">{pending} pendente{pending > 1 ? 's' : ''}</span>}
@@ -108,15 +108,15 @@ export default function OwnerOrders() {
                 <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-black text-pink">{order.id}</p>
+                      <p className="font-black text-brand-pink">{order.id}</p>
                       {st && <span className={`badge ${st.cls}`}>{st.label}</span>}
                     </div>
-                    <p className="text-sm font-bold text-navy mt-0.5">{order.customerName}</p>
+                    <p className="text-sm font-bold text-brand-navy mt-0.5">{order.customerName}</p>
                     <p className="text-xs text-gray-400">{order.customerEmail} · {order.customerPhone}</p>
                     <p className="text-xs text-gray-400">{formatDate(order.createdAt)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-navy text-lg">{formatCurrency(order.total)}</p>
+                    <p className="font-black text-brand-navy text-lg">{formatCurrency(order.total)}</p>
                     <p className="text-xs text-gray-400">{order.paymentMethod === 'pix' ? '🔵 Pix' : '💳 Cartão'}</p>
                   </div>
                 </div>
@@ -127,7 +127,7 @@ export default function OwnerOrders() {
                     <div key={i} className="shrink-0 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
                       <img src={item.productImage} alt="" className="w-9 h-9 rounded-lg object-cover"/>
                       <div className="text-xs">
-                        <p className="font-bold text-navy line-clamp-1 max-w-[120px]">{item.productName}</p>
+                        <p className="font-bold text-brand-navy line-clamp-1 max-w-[120px]">{item.productName}</p>
                         <p className="text-gray-400">{item.size} · {item.color} · ×{item.quantity}</p>
                       </div>
                     </div>
@@ -149,7 +149,7 @@ export default function OwnerOrders() {
                         placeholder="Código de rastreio (ex: AA123456789BR)"
                         value={trackingInputs[order.id] || ''}
                         onChange={e => setTrackingInputs(t => ({...t, [order.id]: e.target.value}))}
-                        className="text-xs border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-pink focus:outline-none w-56"
+                        className="text-xs border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-brand-pink focus:outline-none w-56"
                       />
                       <button onClick={() => handleShipped(order)} className="btn-navy text-xs py-2 px-4">
                         🚚 Marcar como Enviado

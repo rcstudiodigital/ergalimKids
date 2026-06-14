@@ -59,15 +59,15 @@ export default function OwnerShipping() {
     <div className="space-y-6 animate-fadeUp max-w-3xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-black text-navy flex items-center gap-2">
-          <Truck size={24} className="text-pink" /> Opções de Entrega
+        <h1 className="text-2xl font-black text-brand-navy flex items-center gap-2">
+          <Truck size={24} className="text-brand-pink" /> Opções de Entrega
         </h1>
         <p className="text-sm text-gray-500 mt-1">Configure os métodos de envio disponíveis para seus clientes.</p>
       </div>
 
       {/* Frete grátis acima de */}
       <div className="card p-5">
-        <h2 className="font-bold text-navy mb-1">Frete Grátis</h2>
+        <h2 className="font-bold text-brand-navy mb-1">Frete Grátis</h2>
         <p className="text-sm text-gray-500 mb-4">Defina o valor mínimo para o frete ser grátis automaticamente.</p>
         <div className="flex items-center gap-3">
           <div className="relative flex-1 max-w-xs">
@@ -91,10 +91,10 @@ export default function OwnerShipping() {
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <div>
-            <h2 className="font-bold text-navy">Métodos de Envio</h2>
+            <h2 className="font-bold text-brand-navy">Métodos de Envio</h2>
             <p className="text-xs text-gray-400 mt-0.5">{shippingOptions.length} opções cadastradas · {shippingOptions.filter(s => s.active).length} ativas</p>
           </div>
-          <button onClick={() => { setShowForm(true); setForm(EMPTY) }} className="btn-pink flex items-center gap-2 py-2 px-4 text-sm">
+          <button onClick={() => { setShowForm(true); setForm(EMPTY) }} className="btn-primary flex items-center gap-2 py-2 px-4 text-sm">
             <Plus size={16} /> Nova opção
           </button>
         </div>
@@ -129,7 +129,7 @@ export default function OwnerShipping() {
                     </div>
                   </div>
                   <div className="flex gap-2 pt-1">
-                    <button onClick={handleUpdate} className="btn-pink py-2 px-4 text-sm flex items-center gap-1.5"><Check size={14} /> Salvar</button>
+                    <button onClick={handleUpdate} className="btn-primary py-2 px-4 text-sm flex items-center gap-1.5"><Check size={14} /> Salvar</button>
                     <button onClick={() => { setEditingId(null); setEditForm(null) }} className="btn-outline py-2 px-4 text-sm flex items-center gap-1.5"><X size={14} /> Cancelar</button>
                   </div>
                 </div>
@@ -137,12 +137,12 @@ export default function OwnerShipping() {
                 /* Visualização */
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${opt.active ? 'bg-navy/10' : 'bg-gray-100'}`}>
-                      <Truck size={16} className={opt.active ? 'text-navy' : 'text-gray-400'} />
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${opt.active ? 'bg-brand-navy/10' : 'bg-gray-100'}`}>
+                      <Truck size={16} className={opt.active ? 'text-brand-navy' : 'text-gray-400'} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <p className={`font-bold text-sm ${opt.active ? 'text-navy' : 'text-gray-400'}`}>{opt.name}</p>
+                        <p className={`font-bold text-sm ${opt.active ? 'text-brand-navy' : 'text-gray-400'}`}>{opt.name}</p>
                         {!opt.active && <span className="badge badge-gray text-[10px]">Inativo</span>}
                         {opt.price === 0 && opt.active && <span className="badge badge-green text-[10px]">Grátis</span>}
                       </div>
@@ -152,7 +152,7 @@ export default function OwnerShipping() {
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
-                    <span className={`text-sm font-bold ${opt.price === 0 ? 'text-green-600' : 'text-navy'}`}>
+                    <span className={`text-sm font-bold ${opt.price === 0 ? 'text-green-600' : 'text-brand-navy'}`}>
                       {opt.price === 0 ? 'Grátis' : formatCurrency(opt.price)}
                     </span>
                     <div className="flex items-center gap-1">
@@ -176,7 +176,7 @@ export default function OwnerShipping() {
             <div className="py-12 text-center text-gray-400">
               <Truck size={32} className="mx-auto mb-3 opacity-30" />
               <p className="text-sm">Nenhuma opção de entrega cadastrada.</p>
-              <button onClick={() => setShowForm(true)} className="btn-pink mt-4 text-sm py-2">Adicionar primeira opção</button>
+              <button onClick={() => setShowForm(true)} className="btn-primary mt-4 text-sm py-2">Adicionar primeira opção</button>
             </div>
           )}
         </div>
@@ -184,7 +184,7 @@ export default function OwnerShipping() {
         {/* Formulário de adição */}
         {showForm && (
           <div className="border-t border-gray-100 p-5 bg-gray-50 animate-fadeUp">
-            <h3 className="font-bold text-navy mb-4 flex items-center gap-2"><Plus size={16} /> Nova opção de entrega</h3>
+            <h3 className="font-bold text-brand-navy mb-4 flex items-center gap-2"><Plus size={16} /> Nova opção de entrega</h3>
             <div className="space-y-3">
               <div className="grid sm:grid-cols-2 gap-3">
                 <div>
@@ -210,7 +210,7 @@ export default function OwnerShipping() {
                 </div>
               </div>
               <div className="flex gap-2 pt-1">
-                <button onClick={handleAdd} className="btn-pink py-2 px-4 text-sm flex items-center gap-1.5"><Check size={14} /> Adicionar</button>
+                <button onClick={handleAdd} className="btn-primary py-2 px-4 text-sm flex items-center gap-1.5"><Check size={14} /> Adicionar</button>
                 <button onClick={() => setShowForm(false)} className="btn-outline py-2 px-4 text-sm flex items-center gap-1.5"><X size={14} /> Cancelar</button>
               </div>
             </div>

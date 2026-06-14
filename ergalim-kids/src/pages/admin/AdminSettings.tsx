@@ -52,7 +52,7 @@ export default function AdminSettings() {
     <div className="space-y-6 animate-fadeUp max-w-2xl">
       <div>
         <h1 className="text-2xl font-black text-white flex items-center gap-2">
-          <Settings size={22} className="text-pink"/> Configurações Globais (Admin)
+          <Settings size={22} className="text-brand-pink"/> Configurações Globais (Admin)
         </h1>
         <p className="text-sm text-gray-400 mt-1">Somente você (admin) vê e edita esta área.</p>
       </div>
@@ -60,8 +60,8 @@ export default function AdminSettings() {
       {/* GATEWAY DE PAGAMENTO — Cashout */}
       <div className="bg-gray-900 border border-gray-800 rounded-2xl overflow-hidden">
         <div className="p-5 border-b border-gray-800 flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-pink/10 flex items-center justify-center">
-            <CreditCard size={16} className="text-pink"/>
+          <div className="w-9 h-9 rounded-xl bg-brand-pink/10 flex items-center justify-center">
+            <CreditCard size={16} className="text-brand-pink"/>
           </div>
           <div>
             <h2 className="font-black text-white">Gateway de Pagamento</h2>
@@ -73,7 +73,7 @@ export default function AdminSettings() {
           {/* Seleção de gateway */}
           <div className="grid gap-3">
             {GATEWAYS.map(gw => (
-              <label key={gw.id} className={`flex items-start gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${form.paymentGateway === gw.id ? 'border-pink bg-pink/5' : 'border-gray-700 hover:border-gray-600'}`}>
+              <label key={gw.id} className={`flex items-start gap-4 p-4 border-2 rounded-xl cursor-pointer transition-all ${form.paymentGateway === gw.id ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-700 hover:border-gray-600'}`}>
                 <input
                   type="radio"
                   name="gateway"
@@ -92,7 +92,7 @@ export default function AdminSettings() {
                   </div>
                   <p className="text-xs text-gray-400 mt-1">{gw.desc}</p>
                   <a href={gw.link} target="_blank" rel="noreferrer"
-                    className="text-xs text-pink hover:underline flex items-center gap-1 mt-1 font-semibold w-fit">
+                    className="text-xs text-brand-pink hover:underline flex items-center gap-1 mt-1 font-semibold w-fit">
                     Como configurar <ExternalLink size={10}/>
                   </a>
                 </div>
@@ -157,7 +157,7 @@ export default function AdminSettings() {
           <label key={item.key} className="flex items-center gap-3 cursor-pointer">
             <button
               onClick={() => setForm(f => ({ ...f, [item.key]: !(f as any)[item.key] }))}
-              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${(form as any)[item.key] ? 'bg-pink' : 'bg-gray-700'}`}
+              className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${(form as any)[item.key] ? 'bg-brand-pink' : 'bg-gray-700'}`}
             >
               <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${(form as any)[item.key] ? 'left-5' : 'left-0.5'}`}/>
             </button>
@@ -166,7 +166,7 @@ export default function AdminSettings() {
         ))}
       </div>
 
-      <button onClick={save} disabled={saving} className="btn-pink w-full flex items-center justify-center gap-2 py-4 text-base">
+      <button onClick={save} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
         {saving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> Salvando...</> : <><Save size={18}/> Salvar todas as configurações</>}
       </button>
     </div>

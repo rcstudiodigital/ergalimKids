@@ -68,7 +68,7 @@ export default function AdminCustomize() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-black text-white flex items-center gap-2">
-            <Monitor size={22} className="text-pink"/> Personalizar Site
+            <Monitor size={22} className="text-brand-pink"/> Personalizar Site
           </h1>
           <p className="text-sm text-gray-400 mt-1">Edite a aparência da loja. As alterações ficam visíveis imediatamente.</p>
         </div>
@@ -76,7 +76,7 @@ export default function AdminCustomize() {
           <button onClick={reset} className="btn-ghost text-gray-400 hover:text-white border border-gray-700 rounded-xl px-4 py-2 flex items-center gap-2 text-sm">
             <RotateCcw size={14}/> Desfazer
           </button>
-          <button onClick={save} disabled={saving} className="btn-pink flex items-center gap-2 px-5">
+          <button onClick={save} disabled={saving} className="btn-primary flex items-center gap-2 px-5">
             {saving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/>Salvando...</> : <><Save size={16}/> Salvar</>}
           </button>
         </div>
@@ -86,7 +86,7 @@ export default function AdminCustomize() {
       <div className="flex gap-1 bg-gray-900 p-1 rounded-2xl w-fit">
         {TABS.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === t.id ? 'bg-pink text-white' : 'text-gray-400 hover:text-white'}`}>
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold transition-all ${tab === t.id ? 'bg-brand-pink text-white' : 'text-gray-400 hover:text-white'}`}>
             {t.icon} {t.label}
           </button>
         ))}
@@ -98,7 +98,7 @@ export default function AdminCustomize() {
           <div className="space-y-5">
             {/* Título */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
-              <h2 className="font-black text-white flex items-center gap-2"><Type size={16} className="text-pink"/> Textos do Hero</h2>
+              <h2 className="font-black text-white flex items-center gap-2"><Type size={16} className="text-brand-pink"/> Textos do Hero</h2>
               <div>
                 <label className="text-xs font-bold text-gray-400 block mb-1">Título principal</label>
                 <input value={hero.title} onChange={e => setHero(h => ({...h, title: e.target.value}))}
@@ -128,7 +128,7 @@ export default function AdminCustomize() {
 
             {/* Imagem */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
-              <h2 className="font-black text-white flex items-center gap-2"><Image size={16} className="text-pink"/> Imagem de Fundo</h2>
+              <h2 className="font-black text-white flex items-center gap-2"><Image size={16} className="text-brand-pink"/> Imagem de Fundo</h2>
               <div>
                 <label className="text-xs font-bold text-gray-400 block mb-1">URL da imagem</label>
                 <input value={hero.imageUrl} onChange={e => setHero(h => ({...h, imageUrl: e.target.value}))}
@@ -144,7 +144,7 @@ export default function AdminCustomize() {
               <div>
                 <label className="text-xs font-bold text-gray-400 flex items-center justify-between mb-2">
                   <span>Escurecimento da imagem</span>
-                  <span className="text-pink font-black">{hero.overlayOpacity}%</span>
+                  <span className="text-brand-pink font-black">{hero.overlayOpacity}%</span>
                 </label>
                 <input type="range" min={0} max={100} value={hero.overlayOpacity}
                   onChange={e => setHero(h => ({...h, overlayOpacity: Number(e.target.value)}))}
@@ -166,7 +166,7 @@ export default function AdminCustomize() {
                     'https://images.unsplash.com/photo-1478546344-e1401e1f4234?w=600&q=80',
                   ].map(url => (
                     <button key={url} onClick={() => setHero(h => ({...h, imageUrl: url}))}
-                      className={`aspect-video rounded-lg overflow-hidden border-2 transition-colors ${hero.imageUrl === url ? 'border-pink' : 'border-transparent hover:border-gray-600'}`}>
+                      className={`aspect-video rounded-lg overflow-hidden border-2 transition-colors ${hero.imageUrl === url ? 'border-brand-pink' : 'border-transparent hover:border-gray-600'}`}>
                       <img src={url} alt="" className="w-full h-full object-cover"/>
                     </button>
                   ))}
@@ -187,12 +187,12 @@ export default function AdminCustomize() {
                   </>
                 )}
                 <div className="relative p-8">
-                  <div className="inline-block bg-pink/20 border border-pink/40 text-pink text-xs font-bold px-4 py-1.5 rounded-full mb-4">✨ NOVA COLEÇÃO 2025</div>
+                  <div className="inline-block bg-brand-pink/20 border border-brand-pink/40 text-brand-pink text-xs font-bold px-4 py-1.5 rounded-full mb-4">✨ NOVA COLEÇÃO 2025</div>
                   <h1 className="font-display font-black text-2xl text-white leading-tight mb-3" style={{fontFamily: theme.fontFamily}}>
                     {hero.title || 'Título aqui'}
                   </h1>
                   <p className="text-white/70 text-sm mb-5">{hero.subtitle}</p>
-                  <button className="btn-pink text-sm px-6 py-2.5">{hero.buttonText}</button>
+                  <button className="btn-primary text-sm px-6 py-2.5">{hero.buttonText}</button>
                 </div>
               </div>
             </div>
@@ -218,7 +218,7 @@ export default function AdminCustomize() {
                   </div>
                 </div>
                 <button onClick={() => toggleSection(section.id)}
-                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${section.visible ? 'bg-pink' : 'bg-gray-700'}`}>
+                  className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${section.visible ? 'bg-brand-pink' : 'bg-gray-700'}`}>
                   <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${section.visible ? 'left-6' : 'left-0.5'}`}/>
                 </button>
               </div>
@@ -267,7 +267,7 @@ export default function AdminCustomize() {
           <div className="space-y-5">
             {/* Cores pré-definidas */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
-              <h2 className="font-black text-white flex items-center gap-2"><Palette size={16} className="text-pink"/> Esquema de Cores</h2>
+              <h2 className="font-black text-white flex items-center gap-2"><Palette size={16} className="text-brand-pink"/> Esquema de Cores</h2>
               <div className="grid grid-cols-2 gap-3">
                 {PRESET_COLORS.map(preset => (
                   <button key={preset.name} onClick={() => setTheme(t => ({...t, primaryColor: preset.primary, accentColor: preset.accent}))}
@@ -304,10 +304,10 @@ export default function AdminCustomize() {
 
             {/* Fonte */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
-              <h2 className="font-black text-white flex items-center gap-2"><Type size={16} className="text-pink"/> Tipografia</h2>
+              <h2 className="font-black text-white flex items-center gap-2"><Type size={16} className="text-brand-pink"/> Tipografia</h2>
               <div className="space-y-2">
                 {FONT_OPTIONS.map(f => (
-                  <label key={f.value} className={`flex items-center justify-between p-3 border-2 rounded-xl cursor-pointer transition-all ${theme.fontFamily === f.value ? 'border-pink bg-pink/5' : 'border-gray-700 hover:border-gray-600'}`}>
+                  <label key={f.value} className={`flex items-center justify-between p-3 border-2 rounded-xl cursor-pointer transition-all ${theme.fontFamily === f.value ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-700 hover:border-gray-600'}`}>
                     <div className="flex items-center gap-3">
                       <input type="radio" name="font" checked={theme.fontFamily === f.value} onChange={() => setTheme(t => ({...t, fontFamily: f.value}))} className="accent-pink"/>
                       <span className="text-white font-semibold text-sm">{f.label}</span>
@@ -320,12 +320,12 @@ export default function AdminCustomize() {
 
             {/* Border radius */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-3">
-              <h2 className="font-black text-white flex items-center gap-2"><Layout size={16} className="text-pink"/> Estilo dos Cantos</h2>
+              <h2 className="font-black text-white flex items-center gap-2"><Layout size={16} className="text-brand-pink"/> Estilo dos Cantos</h2>
               <div className="grid grid-cols-3 gap-3">
                 {RADIUS_OPTIONS.map(r => (
                   <button key={r.value} onClick={() => setTheme(t => ({...t, borderRadius: r.value}))}
-                    className={`p-4 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${theme.borderRadius === r.value ? 'border-pink bg-pink/5' : 'border-gray-700 hover:border-gray-500'}`}>
-                    <div className="w-10 h-10 bg-pink/30" style={{borderRadius: r.preview}}/>
+                    className={`p-4 border-2 rounded-xl flex flex-col items-center gap-2 transition-all ${theme.borderRadius === r.value ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-700 hover:border-gray-500'}`}>
+                    <div className="w-10 h-10 bg-brand-pink/30" style={{borderRadius: r.preview}}/>
                     <span className="text-xs text-gray-300 font-semibold">{r.label}</span>
                   </button>
                 ))}

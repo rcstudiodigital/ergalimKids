@@ -33,7 +33,7 @@ export default function AdminPermissions() {
   return (
     <div className="space-y-6 animate-fadeUp max-w-2xl">
       <div>
-        <h1 className="text-2xl font-black text-navy flex items-center gap-2"><Shield size={22} className="text-pink"/> Permissões do Dono</h1>
+        <h1 className="text-2xl font-black text-brand-navy flex items-center gap-2"><Shield size={22} className="text-brand-pink"/> Permissões do Dono</h1>
         <p className="text-sm text-gray-500 mt-1">Configure o que o proprietário da loja pode acessar e modificar.</p>
       </div>
 
@@ -46,12 +46,12 @@ export default function AdminPermissions() {
         {PERM_LABELS.map(({ key, label, desc }) => (
           <div key={key} className="flex items-center justify-between px-5 py-4 gap-4">
             <div className="flex-1">
-              <p className="font-bold text-navy text-sm">{label}</p>
+              <p className="font-bold text-brand-navy text-sm">{label}</p>
               <p className="text-xs text-gray-400 mt-0.5">{desc}</p>
             </div>
             <button
               onClick={() => toggle(key)}
-              className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${perms[key] ? 'bg-pink' : 'bg-gray-200'}`}
+              className={`relative w-12 h-6 rounded-full transition-colors duration-200 shrink-0 ${perms[key] ? 'bg-brand-pink' : 'bg-gray-200'}`}
             >
               <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${perms[key] ? 'left-6' : 'left-0.5'}`}/>
             </button>
@@ -62,7 +62,7 @@ export default function AdminPermissions() {
       <div className="flex flex-col sm:flex-row gap-3">
         <button onClick={disableAll} className="btn-outline flex-1">Desabilitar tudo</button>
         <button onClick={enableAll} className="btn-outline flex-1">Habilitar tudo</button>
-        <button onClick={save} className="btn-pink flex-1 flex items-center justify-center gap-2">
+        <button onClick={save} className="btn-primary flex-1 flex items-center justify-center gap-2">
           <Save size={16}/> Salvar permissões
         </button>
       </div>

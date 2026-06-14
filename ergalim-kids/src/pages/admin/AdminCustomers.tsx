@@ -37,7 +37,7 @@ export default function AdminCustomers() {
           <p className="text-xs text-gray-500 mt-1">Clientes cadastrados</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-center">
-          <p className="text-2xl font-black text-pink">{totalOrders}</p>
+          <p className="text-2xl font-black text-brand-pink">{totalOrders}</p>
           <p className="text-xs text-gray-500 mt-1">Pedidos totais</p>
         </div>
         <div className="bg-gray-900 border border-gray-800 rounded-2xl p-4 text-center">
@@ -68,7 +68,7 @@ export default function AdminCustomers() {
                 <tr key={c.id} className="hover:bg-gray-800/50 transition-colors">
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-pink/20 flex items-center justify-center text-pink font-black text-sm">
+                      <div className="w-9 h-9 rounded-full bg-brand-pink/20 flex items-center justify-center text-brand-pink font-black text-sm">
                         {c.name.charAt(0)}
                       </div>
                       <div>
@@ -84,10 +84,10 @@ export default function AdminCustomers() {
                   <td className="px-5 py-4 text-gray-400 text-xs">{c.city}</td>
                   <td className="px-5 py-4">
                     <span className="flex items-center gap-1.5 text-gray-300">
-                      <ShoppingBag size={14} className="text-pink"/> {c.totalOrders}
+                      <ShoppingBag size={14} className="text-brand-pink"/> {c.totalOrders}
                     </span>
                   </td>
-                  <td className="px-5 py-4 text-right font-black text-pink">{formatCurrency(c.totalSpent)}</td>
+                  <td className="px-5 py-4 text-right font-black text-brand-pink">{formatCurrency(c.totalSpent)}</td>
                 </tr>
               ))}
             </tbody>

@@ -36,23 +36,23 @@ export default function OwnerPromotions() {
 
   return (
     <div className="space-y-6 animate-fadeUp max-w-3xl">
-      <h1 className="text-2xl font-black text-navy flex items-center gap-2"><Tag size={22} className="text-pink" /> Promoções</h1>
+      <h1 className="text-2xl font-black text-brand-navy flex items-center gap-2"><Tag size={22} className="text-brand-pink" /> Promoções</h1>
 
       {/* Cupons */}
       <div className="card overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b border-gray-100">
           <div>
-            <h2 className="font-bold text-navy">Cupons de Desconto</h2>
+            <h2 className="font-bold text-brand-navy">Cupons de Desconto</h2>
             <p className="text-xs text-gray-400 mt-0.5">{coupons.length} cupons · {coupons.filter(c => c.active).length} ativos</p>
           </div>
-          <button onClick={() => setShowForm(true)} className="btn-pink flex items-center gap-2 py-2 px-4 text-sm"><Plus size={15} /> Novo cupom</button>
+          <button onClick={() => setShowForm(true)} className="btn-primary flex items-center gap-2 py-2 px-4 text-sm"><Plus size={15} /> Novo cupom</button>
         </div>
 
         <div className="divide-y divide-gray-50">
           {coupons.map(c => (
             <div key={c.code} className="flex items-center justify-between px-5 py-4 gap-4">
               <div>
-                <p className={`font-black text-lg font-mono ${c.active ? 'text-navy' : 'text-gray-300'}`}>{c.code}</p>
+                <p className={`font-black text-lg font-mono ${c.active ? 'text-brand-navy' : 'text-gray-300'}`}>{c.code}</p>
                 <p className="text-xs text-gray-500">
                   {Math.round(c.discount * 100)}% de desconto
                   {c.minValue ? ` · mín. R$${c.minValue}` : ''}
@@ -71,7 +71,7 @@ export default function OwnerPromotions() {
 
         {showForm && (
           <div className="border-t border-gray-100 p-5 bg-gray-50 animate-fadeUp">
-            <h3 className="font-bold text-navy mb-4">Novo Cupom</h3>
+            <h3 className="font-bold text-brand-navy mb-4">Novo Cupom</h3>
             <div className="grid sm:grid-cols-3 gap-3 mb-3">
               <div>
                 <label className="text-xs font-bold text-gray-500 block mb-1">Código *</label>
@@ -87,7 +87,7 @@ export default function OwnerPromotions() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleAdd} className="btn-pink py-2 px-4 text-sm">Criar cupom</button>
+              <button onClick={handleAdd} className="btn-primary py-2 px-4 text-sm">Criar cupom</button>
               <button onClick={() => setShowForm(false)} className="btn-outline py-2 px-4 text-sm">Cancelar</button>
             </div>
           </div>
@@ -97,7 +97,7 @@ export default function OwnerPromotions() {
       {/* Promoções por produto */}
       <div className="card overflow-hidden">
         <div className="p-5 border-b border-gray-100">
-          <h2 className="font-bold text-navy">Promoções por Produto</h2>
+          <h2 className="font-bold text-brand-navy">Promoções por Produto</h2>
           <p className="text-xs text-gray-400 mt-0.5">Ative ou desative o preço promocional em cada produto</p>
         </div>
         <div className="divide-y divide-gray-50">
@@ -114,7 +114,7 @@ export default function OwnerPromotions() {
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {p.originalPrice && <span className="badge badge-pink text-[10px]">Em promoção</span>}
-                <button onClick={() => toggleSale(p)} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-colors ${p.originalPrice ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-pink text-white hover:bg-pink-dark'}`}>
+                <button onClick={() => toggleSale(p)} className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-colors ${p.originalPrice ? 'bg-red-50 text-red-600 hover:bg-red-100' : 'bg-brand-pink text-white hover:bg-brand-pink-dark'}`}>
                   {p.originalPrice ? 'Remover' : 'Colocar em promoção'}
                 </button>
               </div>

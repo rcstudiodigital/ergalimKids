@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Star, Package, X, Image } from 'lucide-react'
+import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Star, Package, X } from 'lucide-react'
+import ImageUpload from '@/components/ui/ImageUpload'
 import { useStore } from '@/context/StoreContext'
 import type { Product, ProductVariant } from '@/types'
 import { formatCurrency } from '@/utils/security'
@@ -88,10 +89,10 @@ export default function OwnerProducts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-navy">Produtos</h1>
+          <h1 className="text-2xl font-black text-brand-navy">Produtos</h1>
           <p className="text-sm text-gray-400 mt-0.5">{products.length} produtos · {products.filter(p=>p.active).length} ativos</p>
         </div>
-        <button onClick={openAdd} className="btn-pink flex items-center gap-2">
+        <button onClick={openAdd} className="btn-primary flex items-center gap-2">
           <Plus size={16}/> Novo produto
         </button>
       </div>
@@ -130,14 +131,14 @@ export default function OwnerProducts() {
                       <div className="flex items-center gap-3">
                         <img src={p.images[0]} alt={p.name} className="w-10 h-10 rounded-xl object-cover bg-gray-100 shrink-0"/>
                         <div>
-                          <p className="font-bold text-navy text-sm line-clamp-1">{p.name}</p>
+                          <p className="font-bold text-brand-navy text-sm line-clamp-1">{p.name}</p>
                           <p className="text-xs text-gray-400">{p.variants.length} variante{p.variants.length !== 1 ? 's' : ''}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-500 text-xs hidden md:table-cell">{p.category}</td>
                     <td className="px-4 py-3">
-                      <span className="font-black text-navy">{formatCurrency(p.price)}</span>
+                      <span className="font-black text-brand-navy">{formatCurrency(p.price)}</span>
                       {p.originalPrice && <span className="block text-xs text-gray-400 line-through">{formatCurrency(p.originalPrice)}</span>}
                     </td>
                     <td className="px-4 py-3 hidden sm:table-cell">
@@ -154,7 +155,7 @@ export default function OwnerProducts() {
                         <button onClick={() => toggleActive(p)} className="btn-ghost p-1.5" title={p.active?'Desativar':'Ativar'}>
                           {p.active ? <EyeOff size={14}/> : <Eye size={14}/>}
                         </button>
-                        <button onClick={() => openEdit(p)} className="btn-ghost p-1.5 text-navy" title="Editar">
+                        <button onClick={() => openEdit(p)} className="btn-ghost p-1.5 text-brand-navy" title="Editar">
                           <Pencil size={14}/>
                         </button>
                         <button onClick={() => handleDelete(p.id, p.name)} className="btn-ghost p-1.5 hover:text-red-500" title="Excluir">
@@ -176,7 +177,7 @@ export default function OwnerProducts() {
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl animate-fadeUp">
             {/* Header modal */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h2 className="font-black text-navy text-lg">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
+              <h2 className="font-black text-brand-navy text-lg">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
               <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-700 p-1"><X size={20}/></button>
             </div>
 
@@ -184,7 +185,7 @@ export default function OwnerProducts() {
             <div className="flex border-b border-gray-100">
               {([['info','Informações'],['images','Imagens'],['variants','Tamanhos & Estoque']] as const).map(([t, label]) => (
                 <button key={t} onClick={() => setActiveTab(t)}
-                  className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab===t ? 'border-b-2 border-pink text-pink' : 'text-gray-400 hover:text-gray-600'}`}>
+                  className={`flex-1 py-3 text-sm font-bold transition-colors ${activeTab===t ? 'border-b-2 border-brand-pink text-brand-pink' : 'text-gray-400 hover:text-gray-600'}`}>
                   {label}
                 </button>
               ))}
@@ -240,31 +241,34 @@ export default function OwnerProducts() {
               {/* ── IMAGENS ──────────────────────────────────────────── */}
               {activeTab === 'images' && (
                 <div className="space-y-4">
-                  <p className="text-sm text-gray-500">Cole as URLs das imagens do produto. A primeira é a imagem principal.</p>
+                  <p className="text-sm text-gray-500 font-bold">
+                    Adicione até 5 imagens. A <strong>primeira</strong> é a capa do produto.
+                  </p>
                   {form.images.map((url, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="flex gap-2 items-center">
-                        <span className="text-xs font-bold text-gray-400 w-6 text-center">{i+1}</span>
-                        <input value={url} onChange={e => updateImage(i, e.target.value)} className="input-field flex-1 text-xs font-mono" placeholder="https://..."/>
+                    <div key={i} className="p-3 bg-gray-50 rounded-2xl border border-gray-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-black text-gray-500">
+                          {i === 0 ? '📸 Imagem principal (capa)' : `📷 Imagem ${i + 1}`}
+                        </span>
                         {form.images.length > 1 && (
-                          <button onClick={() => removeImage(i)} className="text-red-400 hover:text-red-600 p-1"><X size={16}/></button>
+                          <button onClick={() => removeImage(i)}
+                            className="text-red-400 hover:text-red-600 text-xs font-bold flex items-center gap-1">
+                            <X size={12}/> Remover
+                          </button>
                         )}
                       </div>
-                      {url && (
-                        <div className="ml-8 rounded-xl overflow-hidden aspect-[3/2] bg-gray-100 max-w-[200px]">
-                          <img src={url} alt="" className="w-full h-full object-cover" onError={e => (e.currentTarget.style.display='none')}/>
-                        </div>
-                      )}
+                      <ImageUpload
+                        value={url}
+                        onChange={newUrl => updateImage(i, newUrl)}
+                      />
                     </div>
                   ))}
                   {form.images.length < 5 && (
-                    <button onClick={addImage} className="btn-outline w-full flex items-center justify-center gap-2 text-sm">
-                      <Image size={15}/> Adicionar mais uma imagem
+                    <button onClick={addImage}
+                      className="btn-outline w-full justify-center text-sm py-3">
+                      <Plus size={15}/> Adicionar mais imagem
                     </button>
                   )}
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-600">
-                    💡 Dica: use fotos quadradas ou em proporção 3:4. Você pode usar links do Google Drive, WhatsApp Web, Unsplash ou qualquer imagem pública.
-                  </div>
                 </div>
               )}
 
@@ -306,7 +310,7 @@ export default function OwnerProducts() {
                         <button key={label} onClick={() => {
                           const news = sizes.split(',').map(s => ({ size: s.trim(), color: 'A definir', stock: 0, sku: '' }))
                           setForm(f => ({...f, variants: news}))
-                        }} className="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg font-semibold text-gray-600 hover:border-navy hover:text-navy transition-colors">
+                        }} className="text-xs px-3 py-1.5 bg-white border border-gray-200 rounded-lg font-semibold text-gray-600 hover:border-brand-navy hover:text-brand-navy transition-colors">
                           {label}
                         </button>
                       ))}
@@ -319,7 +323,7 @@ export default function OwnerProducts() {
             {/* Footer modal */}
             <div className="flex gap-3 p-5 border-t border-gray-100">
               <button onClick={() => setShowForm(false)} className="btn-outline flex-1">Cancelar</button>
-              <button onClick={handleSave} className="btn-pink flex-1">
+              <button onClick={handleSave} className="btn-primary flex-1">
                 {editProduct ? 'Salvar alterações' : 'Adicionar produto'}
               </button>
             </div>

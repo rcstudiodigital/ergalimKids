@@ -1,10 +1,11 @@
 import React, { useState } from 'react'
 import { Navigate, Link } from 'react-router-dom'
-import { User, MapPin, Package, Edit3, Plus, Trash2, Star, Phone, Mail, Save, X, Shield, Check } from 'lucide-react'
+import { User, MapPin, Package, Edit3, Plus, Trash2, Phone, Mail, Save, X, Shield, Check, Loader2 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useCustomer } from '@/context/CustomerContext'
 import { useStore } from '@/context/StoreContext'
 import { formatCurrency, formatDate, isValidCEP, sanitize } from '@/utils/security'
+import { formatCep } from '@/services/cep'
 import type { SavedAddress } from '@/types'
 import toast from 'react-hot-toast'
 

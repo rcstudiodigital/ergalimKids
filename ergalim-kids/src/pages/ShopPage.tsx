@@ -20,9 +20,9 @@ function ProductCard({ product }: { product: any }) {
       </Link>
       <div className="p-4">
         <p className="text-xs text-gray-400 font-semibold mb-0.5">{product.category}</p>
-        <Link to={`/product/${product.id}`} className="text-sm font-bold text-gray-800 hover:text-navy transition-colors line-clamp-2 block">{product.name}</Link>
+        <Link to={`/product/${product.id}`} className="text-sm font-bold text-gray-800 hover:text-brand-navy transition-colors line-clamp-2 block">{product.name}</Link>
         <div className="flex items-baseline gap-2 mt-2">
-          <span className="font-black text-navy">{formatCurrency(product.price)}</span>
+          <span className="font-black text-brand-navy">{formatCurrency(product.price)}</span>
           {product.originalPrice && <span className="text-xs text-gray-400 line-through">{formatCurrency(product.originalPrice)}</span>}
         </div>
         <button onClick={() => { const v = product.variants[0]; if(v){addItem(product,v.size,v.color);toast.success('Adicionado! 🛍️')}}} className="btn-navy w-full mt-3 py-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
@@ -73,7 +73,7 @@ export default function ShopPage() {
       {/* Filtros rápidos */}
       <div className="flex flex-wrap gap-2 mb-6">
         {[['Todos','/shop'],['Masculino','/shop?category=Masculino'],['Feminino','/shop?category=Feminino'],['Promoções','/shop?sale=true'],['Novidades','/shop?new=true']].map(([l,h]) => (
-          <Link key={h} to={h} className={`px-4 py-1.5 text-xs font-bold rounded-full border-2 transition-colors ${(category && h.includes(category)) || (sale && h.includes('sale')) || (!category && !sale && !isNew && h === '/shop') ? 'bg-navy text-white border-navy' : 'border-gray-200 text-gray-600 hover:border-navy hover:text-navy'}`}>{l}</Link>
+          <Link key={h} to={h} className={`px-4 py-1.5 text-xs font-bold rounded-full border-2 transition-colors ${(category && h.includes(category)) || (sale && h.includes('sale')) || (!category && !sale && !isNew && h === '/shop') ? 'bg-brand-navy text-white border-brand-navy' : 'border-gray-200 text-gray-600 hover:border-brand-navy hover:text-brand-navy'}`}>{l}</Link>
         ))}
       </div>
 

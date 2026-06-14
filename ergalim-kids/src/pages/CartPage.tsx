@@ -33,9 +33,9 @@ export default function CartPage() {
   if (items.length === 0) return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 py-20 text-center">
       <ShoppingBag size={48} className="mx-auto text-gray-200 mb-6" />
-      <h2 className="font-display font-black text-3xl text-navy mb-3">Carrinho vazio</h2>
+      <h2 className="font-display font-black text-3xl text-brand-navy mb-3">Carrinho vazio</h2>
       <p className="text-gray-500 mb-8">Adicione produtos e volte aqui para finalizar sua compra.</p>
-      <Link to="/shop" className="btn-pink">Explorar coleção</Link>
+      <Link to="/shop" className="btn-primary">Explorar coleção</Link>
     </div>
   )
 
@@ -52,7 +52,7 @@ export default function CartPage() {
               </Link>
               <div className="flex-1 min-w-0">
                 <div className="flex justify-between gap-2">
-                  <Link to={`/product/${item.product.id}`} className="font-bold text-navy text-sm hover:text-pink transition-colors line-clamp-2">{item.product.name}</Link>
+                  <Link to={`/product/${item.product.id}`} className="font-bold text-brand-navy text-sm hover:text-brand-pink transition-colors line-clamp-2">{item.product.name}</Link>
                   <button onClick={() => removeItem(item.product.id, item.selectedSize, item.selectedColor)} className="text-gray-300 hover:text-red-500 transition-colors shrink-0"><Trash2 size={16}/></button>
                 </div>
                 <p className="text-xs text-gray-400 mt-0.5">{item.selectedSize} · {item.selectedColor}</p>
@@ -62,7 +62,7 @@ export default function CartPage() {
                     <span className="w-8 text-center text-sm font-black">{item.quantity}</span>
                     <button onClick={() => updateQty(item.product.id, item.selectedSize, item.selectedColor, item.quantity+1)} className="w-8 h-8 flex items-center justify-center hover:bg-gray-50"><Plus size={12}/></button>
                   </div>
-                  <span className="font-black text-navy">{formatCurrency(item.product.price * item.quantity)}</span>
+                  <span className="font-black text-brand-navy">{formatCurrency(item.product.price * item.quantity)}</span>
                 </div>
               </div>
             </div>
@@ -73,7 +73,7 @@ export default function CartPage() {
         <div className="space-y-4">
           {/* Entrega */}
           <div className="card p-5">
-            <h3 className="font-black text-navy flex items-center gap-2 mb-3"><Truck size={16} className="text-pink"/> Opção de Entrega</h3>
+            <h3 className="font-black text-brand-navy flex items-center gap-2 mb-3"><Truck size={16} className="text-brand-pink"/> Opção de Entrega</h3>
             {subtotal >= settings.freeShippingAbove ? (
               <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 font-bold">
                 🎉 Frete grátis aplicado!
@@ -81,14 +81,14 @@ export default function CartPage() {
             ) : (
               <div className="space-y-2">
                 {activeShipping.map(opt => (
-                  <label key={opt.id} className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${selectedShippingId === opt.id ? 'border-pink bg-pink/5' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="shipping" value={opt.id} checked={selectedShippingId === opt.id} onChange={() => setSelectedShippingId(opt.id)} className="text-pink" />
+                  <label key={opt.id} className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${selectedShippingId === opt.id ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-200 hover:border-gray-300'}`}>
+                    <input type="radio" name="shipping" value={opt.id} checked={selectedShippingId === opt.id} onChange={() => setSelectedShippingId(opt.id)} className="text-brand-pink" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-navy">{opt.name}</p>
+                      <p className="text-sm font-bold text-brand-navy">{opt.name}</p>
                       <p className="text-xs text-gray-400">{opt.estimatedDays}</p>
                       {opt.description && <p className="text-xs text-gray-400">{opt.description}</p>}
                     </div>
-                    <span className={`text-sm font-black ${opt.price === 0 ? 'text-green-600' : 'text-navy'}`}>{opt.price === 0 ? 'Grátis' : formatCurrency(opt.price)}</span>
+                    <span className={`text-sm font-black ${opt.price === 0 ? 'text-green-600' : 'text-brand-navy'}`}>{opt.price === 0 ? 'Grátis' : formatCurrency(opt.price)}</span>
                   </label>
                 ))}
                 <p className="text-xs text-gray-400 mt-1">Faltam {formatCurrency(settings.freeShippingAbove - subtotal)} para frete grátis!</p>
@@ -98,12 +98,12 @@ export default function CartPage() {
 
           {/* Cupom + Resumo */}
           <div className="card p-5">
-            <h3 className="font-black text-navy mb-4">Resumo do Pedido</h3>
+            <h3 className="font-black text-brand-navy mb-4">Resumo do Pedido</h3>
             <div className="space-y-2 text-sm mb-4">
               <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
               {discount > 0 && <div className="flex justify-between text-green-600"><span>Desconto ({coupon})</span><span>-{formatCurrency(discount)}</span></div>}
               <div className="flex justify-between text-gray-600"><span>Frete</span><span className={shippingPrice === 0 ? 'text-green-600 font-bold' : ''}>{shippingPrice === 0 ? 'Grátis' : selectedOption ? formatCurrency(shippingPrice) : 'Selecione'}</span></div>
-              <div className="flex justify-between font-black text-navy text-base border-t border-gray-100 pt-2"><span>Total</span><span>{formatCurrency(total)}</span></div>
+              <div className="flex justify-between font-black text-brand-navy text-base border-t border-gray-100 pt-2"><span>Total</span><span>{formatCurrency(total)}</span></div>
             </div>
 
             {!coupon ? (
@@ -121,7 +121,7 @@ export default function CartPage() {
               </div>
             )}
 
-            <button onClick={handleCheckout} className="btn-pink w-full py-4 text-base">Finalizar Compra</button>
+            <button onClick={handleCheckout} className="btn-primary w-full py-4 text-base">Finalizar Compra</button>
             <p className="text-xs text-gray-400 text-center mt-3">🔒 Pagamento seguro com criptografia SSL</p>
           </div>
 
