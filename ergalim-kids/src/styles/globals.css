@@ -152,3 +152,9 @@
   .border-3 { border-width: 3px; }
   .text-stroke { -webkit-text-stroke: 2px currentColor; }
 }
+
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

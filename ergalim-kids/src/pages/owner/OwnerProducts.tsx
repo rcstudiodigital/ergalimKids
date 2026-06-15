@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, Pencil, Trash2, Eye, EyeOff, Search, Star, Package, X } from 'lucide-react'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { useStore } from '@/context/StoreContext'
@@ -171,9 +172,9 @@ export default function OwnerProducts() {
         </div>
       </div>
 
-      {/* ── MODAL DE PRODUTO ────────────────────────────────────────────── */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-3">
+      {/* ── MODAL DE PRODUTO (via portal, fora do <main> com overflow) ──── */}
+      {showForm && createPortal(
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-3">
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl animate-fadeUp max-h-[90vh] flex flex-col">
             {/* Header modal */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
@@ -328,7 +329,8 @@ export default function OwnerProducts() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

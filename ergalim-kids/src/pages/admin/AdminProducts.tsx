@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Plus, Pencil, Trash2, Search, Eye, EyeOff, Star } from 'lucide-react'
 import ImageUpload from '@/components/ui/ImageUpload'
 import { useStore } from '@/context/StoreContext'
@@ -111,8 +112,8 @@ export default function AdminProducts() {
       </div>
 
       {/* Modal Produto */}
-      {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+      {showForm && createPortal(
+        <div className="fixed inset-0 bg-black/60 z-[100] flex items-center justify-center p-4">
           <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-black text-brand-navy">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
@@ -151,7 +152,8 @@ export default function AdminProducts() {
               <button onClick={handleSave} className="btn-primary flex-1">Salvar produto</button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
