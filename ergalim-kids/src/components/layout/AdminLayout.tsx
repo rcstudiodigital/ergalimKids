@@ -3,8 +3,9 @@ import { Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, ShoppingBag, Users,
   BarChart2, Palette, Shield, CreditCard,
-  Menu, X, LogOut, ChevronRight, Star, Settings, Truck
-, Megaphone } from 'lucide-react'
+  Menu, X, LogOut, ChevronRight, Star, Settings, Truck,
+  Megaphone, Mail
+} from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 const MENU = [
