@@ -68,7 +68,7 @@ export default function OwnerFinancial() {
         {[
           {
             label: 'Receita Total',
-            value: formatCurrency(revenue + 28540),
+            value: formatCurrency(revenue),
             sub: `${paid.length + 139} pedidos pagos`,
             icon: '💰',
             bg: 'bg-bg-soft border-brand-pink/20',

@@ -112,8 +112,8 @@ export default function AdminProducts() {
 
       {/* Modal Produto */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 sm:pt-16 overflow-y-auto">
-          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp my-auto max-h-[92vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-black text-brand-navy">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
               <button onClick={()=>setShowForm(false)} className="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>

@@ -4,8 +4,8 @@ import { useStore } from '@/context/StoreContext'
 import { formatCurrency, formatDate } from '@/utils/security'
 
 const MONTHS = ['Jul','Ago','Set','Out','Nov','Dez','Jan']
-const REVENUE = [18200, 21500, 19800, 24300, 31200, 38500, 28540]
-const maxRev = Math.max(...REVENUE)
+const REVENUE = [0, 0, 0, 0, 0, 0, 0]
+const maxRev = Math.max(...REVENUE) || 1
 
 export default function AdminFinancial() {
   const { orders } = useStore()

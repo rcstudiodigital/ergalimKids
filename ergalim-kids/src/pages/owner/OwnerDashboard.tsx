@@ -52,7 +52,7 @@ export default function OwnerDashboard() {
       <div className="grid grid-cols-2 xl:grid-cols-3 gap-4">
         <div className="card-kid p-5 bg-bg-soft border-2 border-brand-pink/20">
           <p className="text-2xl mb-2">💰</p>
-          <p className="text-2xl font-black text-brand-navy">{formatCurrency(revenue + 28540)}</p>
+          <p className="text-2xl font-black text-brand-navy">{formatCurrency(revenue)}</p>
           <p className="text-xs text-gray-400 font-bold mt-1">Receita total</p>
         </div>
         <div className="card-kid p-5 bg-bg-blue border-2 border-brand-sky/20">

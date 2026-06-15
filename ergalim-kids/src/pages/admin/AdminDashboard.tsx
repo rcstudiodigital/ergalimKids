@@ -17,6 +17,7 @@ export default function AdminDashboard() {
   const { products, orders } = useStore()
   const totalRevenue = orders.filter(o => o.status !== 'cancelled').reduce((a,o) => a+o.total, 0)
   const lowStock = products.filter(p => p.variants.some(v => v.stock <= 2) && p.active)
+  const uniqueCustomers = new Set(orders.map(o => o.customerEmail).filter(Boolean)).size
 
   return (
     <div className="space-y-6 animate-fadeUp">
@@ -27,10 +28,10 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
         {[
-          { label:'Receita Total', value: formatCurrency(totalRevenue), icon:TrendingUp, color:'text-brand-pink', bg:'bg-brand-pink/10', change:'+12%' },
+          { label:'Receita Total', value: formatCurrency(totalRevenue), icon:TrendingUp, color:'text-brand-pink', bg:'bg-brand-pink/10', change:`${orders.length} vendas` },
           { label:'Pedidos', value: String(orders.length), icon:ShoppingBag, color:'text-brand-navy', bg:'bg-brand-navy/10', change:`${orders.filter(o=>o.status==='pending').length} pendentes` },
           { label:'Produtos Ativos', value: String(products.filter(p=>p.active).length), icon:Package, color:'text-green-600', bg:'bg-green-50', change:`${lowStock.length} estoque baixo` },
-          { label:'Clientes', value: '1.043', icon:Users, color:'text-purple-600', bg:'bg-purple-50', change:'+24 este mês' },
+          { label:'Clientes', value: String(uniqueCustomers), icon:Users, color:'text-purple-600', bg:'bg-purple-50', change:'cadastrados' },
         ].map(({ label, value, icon:Icon, color, bg, change }) => (
           <div key={label} className="card p-5">
             <div className="flex items-center justify-between mb-4">
