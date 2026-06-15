@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Search, MessageCircle, Package, Truck, CheckCircle, X, ChevronDown } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
-import { sendOrderShippedToCustomer } from '@/services/email'
+import { sendOrderShippedToCustomer, sendOrderPaidToCustomer, sendOrderProcessingToCustomer, sendOrderDeliveredToCustomer } from '@/services/email'
 import type { OrderStatus } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/security'
 import toast from 'react-hot-toast'
@@ -46,27 +46,48 @@ export default function OwnerOrders() {
   const handleNextStatus = async (order: typeof orders[0]) => {
     const current = getStatus(order.status)
     if (!current.next) return
+    const nextStatus = current.next
 
-    // Se for enviar, pede código de rastreio
-    if (current.next === 'shipped') {
+    // Atualizar status no Firebase
+    if (nextStatus === 'shipped') {
       const code = trackingInputs[order.id]?.trim()
       await updateOrder(order.id, { status: 'shipped', trackingCode: code || undefined })
-      // Enviar email de rastreio para o cliente
-      sendOrderShippedToCustomer({
-        customerName: order.customerName,
-        customerEmail: order.customerEmail,
-        orderId: order.id,
-        trackingCode: code || 'Em breve disponível',
-        items: order.items?.map((i: any) => ({ productName: i.productName, quantity: i.quantity, size: i.size })) || [],
-      }).catch(() => {})
-      toast.success(`🚚 Pedido ${order.id} marcado como enviado! E-mail enviado ao cliente.`)
-      return
+    } else {
+      await updateOrder(order.id, { status: nextStatus })
     }
 
-    await updateOrder(order.id, { status: current.next })
+    // Disparar e-mail para o cliente conforme o novo status
+    const base = {
+      customerName: order.customerName,
+      customerEmail: order.customerEmail,
+      orderId: order.id,
+    }
 
-    const statusLabel = STATUS_FLOW.find(s => s.value === current.next)?.label || ''
-    toast.success(`${statusLabel} — Pedido ${order.id} atualizado!`)
+    try {
+      if (nextStatus === 'paid') {
+        await sendOrderPaidToCustomer({
+          ...base,
+          total: order.total,
+          items: order.items?.map((i: any) => ({ productName: i.productName, quantity: i.quantity, size: i.size })) || [],
+        })
+      } else if (nextStatus === 'processing') {
+        await sendOrderProcessingToCustomer(base)
+      } else if (nextStatus === 'shipped') {
+        const code = trackingInputs[order.id]?.trim()
+        await sendOrderShippedToCustomer({
+          ...base,
+          trackingCode: code || undefined,
+          shippingMethod: order.shippingMethod || 'Padrão',
+        })
+      } else if (nextStatus === 'delivered') {
+        await sendOrderDeliveredToCustomer(base)
+      }
+    } catch {
+      // e-mail falhou silenciosamente — pedido já foi atualizado
+    }
+
+    const statusLabel = STATUS_FLOW.find(s => s.value === nextStatus)?.label || ''
+    toast.success(`${statusLabel} — Pedido ${order.id} atualizado! E-mail enviado ao cliente. 📧`)
   }
 
   const handleCancel = async (order: typeof orders[0]) => {

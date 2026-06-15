@@ -135,7 +135,7 @@ export async function sendOrderConfirmationToCustomer(order: {
       <p style="margin:0;font-size:14px;">${order.shippingAddress.street}, ${order.shippingAddress.number} · ${order.shippingAddress.city}/${order.shippingAddress.state} · CEP ${order.shippingAddress.zipCode}</p>
     </div>
     <p style="font-size:13px;color:#888">Prazo de entrega: conforme opção escolhida. Você receberá outro e-mail quando o pedido for enviado.</p>
-    <a href="https://wa.me/5524992391998" class="btn">Falar no WhatsApp</a>`)
+    <a href="https://wa.me/5521992110726" class="btn">Falar no WhatsApp</a>`)
 
   return sendEmail({ to: order.customerEmail, subject: `Pedido ${order.id} confirmado — Ergalim Kids 🌟`, html })
 }
@@ -194,7 +194,7 @@ export async function sendOrderShippedToCustomer(data: {
     </div>`}
     <div class="divider"></div>
     <p style="font-size:13px;">Dúvidas? Fale com a gente pelo WhatsApp:</p>
-    <a href="https://wa.me/5524992391998" class="btn">WhatsApp (24) 99239-1998</a>`)
+    <a href="https://wa.me/5521992110726" class="btn">WhatsApp (21) 99211-0726</a>`)
 
   return sendEmail({ to: data.customerEmail, subject: `Pedido ${data.orderId} enviado! 🚚 Ergalim Kids`, html })
 }
@@ -212,9 +212,58 @@ export async function sendOrderDeliveredToCustomer(data: {
     <div class="box">
       <p style="margin:0;font-size:14px;">Gostou? Conta pra gente no Instagram: <a href="https://instagram.com/ergalimkids" style="color:#E91E8C;">@ergalimkids</a></p>
     </div>
-    <a href="https://wa.me/5524992391998" class="btn">Falar no WhatsApp</a>`)
+    <a href="https://wa.me/5521992110726" class="btn">Falar no WhatsApp</a>`)
 
   return sendEmail({ to: data.customerEmail, subject: `Pedido ${data.orderId} entregue! ✅ Ergalim Kids`, html })
+}
+
+// 5. Pagamento confirmado → para o CLIENTE
+export async function sendOrderPaidToCustomer(data: {
+  customerName: string
+  customerEmail: string
+  orderId: string
+  total: number
+  items: { productName: string; quantity: number; size: string }[]
+}): Promise<boolean> {
+  const itemsList = data.items.map(i =>
+    `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
+      <strong>${i.productName}</strong> — Tam: ${i.size} · Qtd: ${i.quantity}
+    </div>`
+  ).join('')
+  const html = baseTemplate(`
+    <h1>Pagamento confirmado! ✅</h1>
+    <p>Olá, <strong>${data.customerName}</strong>! Recebemos seu pagamento e seu pedido <strong>${data.orderId}</strong> está confirmado.</p>
+    <div class="box">
+      <p style="margin:0 0 12px;font-weight:900;color:#1B2D5E;">Itens do pedido:</p>
+      ${itemsList}
+      <p style="margin:12px 0 0;font-size:16px;font-weight:900;color:#E91E8C;">Total: ${formatCurrencyEmail(data.total)}</p>
+    </div>
+    <p style="font-size:13px;color:#555;">Agora vamos separar suas peças com muito carinho! Em breve você receberá mais atualizações. 💕</p>
+    <a href="https://wa.me/5521992110726" class="btn">Falar no WhatsApp</a>`)
+  return sendEmail({ to: data.customerEmail, subject: `✅ Pagamento confirmado — Pedido ${data.orderId} | Ergalim Kids`, html })
+}
+
+// 6. Em separação → para o CLIENTE
+export async function sendOrderProcessingToCustomer(data: {
+  customerName: string
+  customerEmail: string
+  orderId: string
+}): Promise<boolean> {
+  const html = baseTemplate(`
+    <h1>Seu pedido está sendo separado! 📦</h1>
+    <p>Olá, <strong>${data.customerName}</strong>! Ótima notícia: seu pedido <strong>${data.orderId}</strong> está sendo preparado com muito carinho pela nossa equipe.</p>
+    <div class="box">
+      <p style="margin:0;font-size:15px;">📦 Status atual: <strong>Em Separação</strong></p>
+      <p style="margin:8px 0 0;font-size:13px;color:#888;">Em breve seu pedido será enviado e você receberá o código de rastreio.</p>
+    </div>
+    <p style="font-size:13px;color:#555;">Dúvidas sobre seu pedido? Fale com a gente:</p>
+    <a href="https://wa.me/5521992110726" class="btn">WhatsApp (21) 99211-0726</a>`)
+  return sendEmail({ to: data.customerEmail, subject: `📦 Pedido ${data.orderId} em separação | Ergalim Kids`, html })
+}
+
+// Helper interno para formatar moeda nos templates
+function formatCurrencyEmail(v: number): string {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 }
 
 // ════════════════════════════════════════════════════════════════════════
