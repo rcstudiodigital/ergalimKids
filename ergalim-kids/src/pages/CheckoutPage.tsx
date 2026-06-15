@@ -25,7 +25,7 @@ const STEPS = [
 export default function CheckoutPage() {
   const { user } = useAuth()
   const { items, total, subtotal, discount, clearCart } = useCart()
-  const { settings } = useStore()
+  const { settings, addOrder } = useStore()
   const navigate = useNavigate()
 
   const [step, setStep]           = useState<Step>('address')
@@ -62,25 +62,31 @@ export default function CheckoutPage() {
     const oid = `EK-${Date.now().toString().slice(-6)}`
     setOrderId(oid)
     try {
-      const payResult = await createMercadoPagoPreference({
-        orderId: oid,
-        items: items.map(i => ({
-          id: i.product.id,
-          title: `${i.product.name} (${i.selectedSize} · ${i.selectedColor})`,
-          quantity: i.quantity,
-          price: i.product.price,
-        })),
-        total: finalTotal,
-        customerEmail: user.email,
+      // 1. SALVA O PEDIDO no banco (sempre, independente da forma de pagamento)
+      addOrder({
         customerName: address.name,
-        successUrl: `${window.location.origin}/order-success?id=${oid}`,
-        failureUrl:  `${window.location.origin}/checkout?error=payment_failed`,
-        pendingUrl:  `${window.location.origin}/order-success?id=${oid}&status=pending`,
-      }, payMethod)
+        customerEmail: user.email,
+        items: items.map(i => ({
+          productId: i.product.id,
+          productName: i.product.name,
+          quantity: i.quantity,
+          size: i.selectedSize,
+          color: i.selectedColor,
+          price: i.product.price,
+          image: i.product.images[0],
+        })),
+        subtotal, shipping: shippingCost, discount, total: finalTotal,
+        status: 'pending',
+        paymentMethod: payMethod,
+        shippingMethod: chosenShipping?.name || 'Padrão',
+        shippingAddress: {
+          name: address.name, phone: address.phone,
+          street: address.street, number: address.number, complement: address.complement,
+          neighborhood: address.neighborhood, city: address.city, state: address.state, zipCode: address.zipCode,
+        },
+      } as any)
 
-      if (!payResult.success) { toast.error('Erro ao processar pagamento.'); return }
-
-      // E-mails automáticos
+      // 2. E-mails automáticos (cliente + dono)
       Promise.all([
         sendOrderConfirmationToCustomer({
           id: oid, customerName: address.name, customerEmail: user.email,
@@ -94,23 +100,41 @@ export default function CheckoutPage() {
           items: items.map(i => ({ productName: i.product.name, quantity: i.quantity, size: i.selectedSize })),
           paymentMethod: payMethod,
         }),
-      ])
+      ]).catch(() => {})
 
-      if (payMethod === 'pix' && payResult.pixCode) {
-        setPixCode(payResult.pixCode)
-        setPixQR(payResult.pixQR || '')
-        clearCart()
-        return
+      // 3. Verifica se Mercado Pago está configurado
+      const mpConfig = settings.paymentMethods?.mercadopago
+      const mpEnabled = mpConfig?.enabled && mpConfig?.publicKey?.startsWith('APP_USR')
+
+      if (mpEnabled && (payMethod === 'pix' || payMethod === 'card')) {
+        // Mercado Pago configurado → usa o gateway
+        try {
+          const payResult = await createMercadoPagoPreference({
+            orderId: oid,
+            items: items.map(i => ({ id: i.product.id, title: `${i.product.name} (${i.selectedSize} · ${i.selectedColor})`, quantity: i.quantity, price: i.product.price })),
+            total: finalTotal, customerEmail: user.email, customerName: address.name,
+            successUrl: `${window.location.origin}/order-success?id=${oid}`,
+            failureUrl: `${window.location.origin}/checkout?error=payment_failed`,
+            pendingUrl: `${window.location.origin}/order-success?id=${oid}&status=pending`,
+          }, payMethod)
+
+          if (payResult.success && payMethod === 'pix' && payResult.pixCode) {
+            setPixCode(payResult.pixCode); setPixQR(payResult.pixQR || ''); clearCart(); return
+          }
+          if (payResult.success && payMethod === 'card' && payResult.initPoint) {
+            clearCart(); window.location.href = payResult.initPoint; return
+          }
+        } catch { /* cai no fluxo manual abaixo */ }
       }
-      if (payMethod === 'card' && payResult.initPoint) {
-        clearCart()
-        window.location.href = payResult.initPoint
-        return
-      }
+
+      // 4. Sem gateway → finaliza direto (pagamento combinado via WhatsApp/PIX manual)
       clearCart()
       navigate(`/order-success?id=${oid}`)
-    } catch { toast.error('Erro inesperado. Tente novamente.') }
-    finally  { setLoading(false) }
+    } catch (e) {
+      console.error('Erro ao finalizar pedido:', e)
+      toast.error('Erro ao finalizar pedido. Tente novamente.')
+    }
+    finally { setLoading(false) }
   }
 
   const copyPix = () => {
@@ -411,7 +435,12 @@ export default function CheckoutPage() {
                 <button onClick={handlePlaceOrder} disabled={loading} className="btn-primary flex-1 py-4 text-base">
                   {loading
                     ? <span className="flex items-center gap-2"><Loader2 size={16} className="animate-spin"/> Processando...</span>
-                    : <span className="flex items-center gap-2"><Shield size={16}/> {payMethod === 'pix' ? `Gerar Pix — ${formatCurrency(finalTotal)}` : `Pagar ${formatCurrency(finalTotal)}`}</span>
+                    : <span className="flex items-center gap-2"><Shield size={16}/> {(() => {
+                        const mpOn = settings.paymentMethods?.mercadopago?.enabled && settings.paymentMethods?.mercadopago?.publicKey?.startsWith('APP_USR')
+                        if (mpOn && payMethod === 'pix') return `Gerar Pix — ${formatCurrency(finalTotal)}`
+                        if (mpOn && payMethod === 'card') return `Pagar ${formatCurrency(finalTotal)}`
+                        return `Confirmar Pedido — ${formatCurrency(finalTotal)}`
+                      })()}</span>
                   }
                 </button>
               </div>
