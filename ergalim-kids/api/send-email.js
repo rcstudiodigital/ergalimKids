@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido' })
   }
 
-  const RESEND_KEY = process.env.RESEND_API_KEY
+  const RESEND_KEY = process.env.RESEND_API_KEY || process.env.VITE_RESEND_API_KEY
   if (!RESEND_KEY) {
     return res.status(500).json({ error: 'Resend não configurado no servidor' })
   }

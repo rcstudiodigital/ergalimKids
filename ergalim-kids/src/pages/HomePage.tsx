@@ -75,10 +75,10 @@ import { ShoppingBag } from 'lucide-react'
 
 // ── Categorias ─────────────────────────────────────────────────────────────
 const CATS = [
-  { name: 'Meninas',   emoji: '👧', color: 'from-brand-pink to-brand-lilac',   href: '/shop?category=Feminino',  img: 'https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?w=400&q=80' },
-  { name: 'Meninos',   emoji: '👦', color: 'from-brand-navy to-brand-sky',     href: '/shop?category=Masculino', img: 'https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?w=400&q=80' },
-  { name: 'Conjuntos', emoji: '👕', color: 'from-brand-mint to-brand-sky',     href: '/shop?category=Unissex',   img: 'https://images.unsplash.com/photo-1522771930-78848d9293e8?w=400&q=80' },
-  { name: 'Novidades', emoji: '✨', color: 'from-brand-yellow to-brand-orange', href: '/shop?new=true',           img: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&q=80' },
+  { name: 'Meninas',   key: 'meninas',   emoji: '👧', color: 'from-brand-pink to-brand-lilac',   href: '/shop?category=Feminino',  img: 'https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?w=400&q=80' },
+  { name: 'Meninos',   key: 'meninos',   emoji: '👦', color: 'from-brand-navy to-brand-sky',     href: '/shop?category=Masculino', img: 'https://images.unsplash.com/photo-1471286174890-9c112ffca5b4?w=400&q=80' },
+  { name: 'Conjuntos', key: 'conjuntos', emoji: '👕', color: 'from-brand-mint to-brand-sky',     href: '/shop?category=Unissex',   img: 'https://images.unsplash.com/photo-1522771930-78848d9293e8?w=400&q=80' },
+  { name: 'Novidades', key: 'novidades', emoji: '✨', color: 'from-brand-yellow to-brand-orange', href: '/shop?new=true',           img: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&q=80' },
 ]
 
 const BENEFITS = [
@@ -90,7 +90,7 @@ const BENEFITS = [
 
 export default function HomePage() {
   const { products, settings } = useStore()
-  const { hero, homeSections } = settings
+  const { hero, homeSections, categoryImages } = settings
 
   const featured = products.filter(p => p.featured && p.active).slice(0, 4)
   const isVisible = (id: string) => {
@@ -230,7 +230,7 @@ export default function HomePage() {
               <Link key={cat.name} to={cat.href}
                 className="group relative aspect-[3/4] rounded-4xl overflow-hidden shadow-kid hover:-translate-y-2 hover:shadow-kid-lg transition-all duration-300 animate-fadeUp"
                 style={{animationDelay:`${i*0.1}s`}}>
-                <img src={cat.img} alt={cat.name}
+                <img src={categoryImages?.[cat.key as keyof typeof categoryImages] || cat.img} alt={cat.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
                 <div className={`absolute inset-0 bg-gradient-to-t ${cat.color} opacity-60`}/>
 

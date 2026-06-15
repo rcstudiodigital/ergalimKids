@@ -88,6 +88,7 @@ export interface SiteSettings {
   // ── Manutenção ─────────────────────────────────────────────────────────
   maintenanceMode: boolean
   // ── CUSTOMIZAÇÃO VISUAL (admin) ────────────────────────────────────────
+  categoryImages?: { meninas: string; meninos: string; conjuntos: string; novidades: string }
   hero: HeroBanner
   homeSections: HomeSection[]
   theme: SiteTheme

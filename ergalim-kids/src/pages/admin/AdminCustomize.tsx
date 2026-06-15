@@ -30,17 +30,23 @@ const PRESET_COLORS = [
 
 export default function AdminCustomize() {
   const { settings, updateSettings } = useStore()
-  const [tab, setTab] = useState<'hero' | 'sections' | 'theme'>('hero')
+  const [tab, setTab] = useState<'hero' | 'categories' | 'sections' | 'theme'>('hero')
   const [hero, setHero]       = useState<HeroBanner>({ ...settings.hero })
   const [sections, setSections] = useState<HomeSection[]>([...settings.homeSections])
   const [theme, setTheme]     = useState<SiteTheme>({ ...settings.theme })
+  const [catImages, setCatImages] = useState({
+    meninas:   settings.categoryImages?.meninas   || '',
+    meninos:   settings.categoryImages?.meninos   || '',
+    conjuntos: settings.categoryImages?.conjuntos || '',
+    novidades: settings.categoryImages?.novidades || '',
+  })
   const [saving, setSaving]   = useState(false)
   const [previewImg, setPreviewImg] = useState(false)
 
   const save = async () => {
     setSaving(true)
     await new Promise(r => setTimeout(r, 500))
-    updateSettings({ hero, homeSections: sections, theme })
+    updateSettings({ hero, homeSections: sections, theme, categoryImages: catImages })
     setSaving(false)
     toast.success('Personalização salva! A home foi atualizada.')
   }
@@ -49,6 +55,12 @@ export default function AdminCustomize() {
     setHero({ ...settings.hero })
     setSections([...settings.homeSections])
     setTheme({ ...settings.theme })
+    setCatImages({
+      meninas:   settings.categoryImages?.meninas   || '',
+      meninos:   settings.categoryImages?.meninos   || '',
+      conjuntos: settings.categoryImages?.conjuntos || '',
+      novidades: settings.categoryImages?.novidades || '',
+    })
     toast('Alterações desfeitas', { icon: '↩️' })
   }
 
@@ -60,6 +72,7 @@ export default function AdminCustomize() {
 
   const TABS = [
     { id: 'hero' as const,     label: 'Hero / Capa',    icon: <Image size={15}/> },
+    { id: 'categories' as const, label: 'Categorias',   icon: <Image size={15}/> },
     { id: 'sections' as const, label: 'Seções da Home', icon: <Layout size={15}/> },
     { id: 'theme' as const,    label: 'Cores & Fonte',  icon: <Palette size={15}/> },
   ]
@@ -195,6 +208,43 @@ export default function AdminCustomize() {
       )}
 
       {/* ── SEÇÕES ─────────────────────────────────────────────────────── */}
+      {/* ── ABA CATEGORIAS ──────────────────────────────────────────── */}
+      {tab === 'categories' && (
+        <div className="space-y-4">
+          <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5">
+            <h2 className="font-black text-white flex items-center gap-2 mb-2">
+              🖼️ Imagens das Categorias
+            </h2>
+            <p className="text-xs text-gray-400 mb-5">
+              Troque as fotos que aparecem na seção "Escolha pelo estilo!" da home.
+              Deixe em branco para usar a imagem padrão.
+            </p>
+
+            <div className="grid sm:grid-cols-2 gap-5">
+              {[
+                { key: 'meninas'   as const, label: '👧 Meninas',   emoji: '👧' },
+                { key: 'meninos'   as const, label: '👦 Meninos',   emoji: '👦' },
+                { key: 'conjuntos' as const, label: '👕 Conjuntos', emoji: '👕' },
+                { key: 'novidades' as const, label: '✨ Novidades', emoji: '✨' },
+              ].map(cat => (
+                <div key={cat.key} className="bg-gray-800/50 rounded-2xl p-4 border border-gray-700">
+                  <p className="font-black text-white text-sm mb-3">{cat.label}</p>
+                  <ImageUpload
+                    value={catImages[cat.key]}
+                    onChange={url => setCatImages(c => ({ ...c, [cat.key]: url }))}
+                    folder="ergalim-kids/categorias"
+                  />
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-4 p-3 bg-blue-900/20 border border-blue-800/40 rounded-xl text-xs text-blue-300 font-bold">
+              💡 Dica: use fotos no formato retrato (mais altas que largas) para ficarem bonitas nos cartões.
+            </div>
+          </div>
+        </div>
+      )}
+
       {tab === 'sections' && (
         <div className="space-y-4 max-w-2xl">
           <p className="text-sm text-gray-400">Ative ou desative seções da página inicial. Você também pode editar os títulos e o banner promocional.</p>

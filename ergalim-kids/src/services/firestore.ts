@@ -13,7 +13,7 @@ import {
   updateDoc, deleteDoc, onSnapshot, query, orderBy,
   serverTimestamp, Unsubscribe
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { db, ensureAuth } from '@/lib/firebase'
 import type { Product, Order, SiteSettings, Coupon, CustomerProfile } from '@/types'
 
 // ── PRODUTOS ────────────────────────────────────────────────────────────────
@@ -25,15 +25,18 @@ export async function fbGetProducts(): Promise<Product[]> {
 }
 
 export async function fbAddProduct(p: Omit<Product, 'id'>): Promise<string> {
+  await ensureAuth()
   const ref = await addDoc(productsRef(), clean({ ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }))
   return ref.id
 }
 
 export async function fbUpdateProduct(id: string, p: Partial<Product>) {
+  await ensureAuth()
   await updateDoc(doc(db, 'products', id), clean({ ...p, updatedAt: serverTimestamp() }))
 }
 
 export async function fbDeleteProduct(id: string) {
+  await ensureAuth()
   await deleteDoc(doc(db, 'products', id))
 }
 
@@ -54,12 +57,14 @@ export async function fbGetOrders(): Promise<Order[]> {
 }
 
 export async function fbAddOrder(o: Omit<Order, 'id'>): Promise<string> {
+  await ensureAuth()
   const id = `EK-${Date.now().toString().slice(-6)}`
   await setDoc(doc(db, 'orders', id), clean({ ...o, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }))
   return id
 }
 
 export async function fbUpdateOrder(id: string, patch: Partial<Order>) {
+  await ensureAuth()
   await updateDoc(doc(db, 'orders', id), clean({ ...patch, updatedAt: serverTimestamp() }))
 }
 
@@ -78,6 +83,7 @@ export async function fbGetSettings(): Promise<Partial<SiteSettings>> {
 }
 
 export async function fbUpdateSettings(patch: Partial<SiteSettings>) {
+  await ensureAuth()
   await setDoc(doc(db, 'settings', 'main'), clean(patch), { merge: true })
 }
 
@@ -100,14 +106,17 @@ export async function fbGetCoupons(): Promise<Coupon[]> {
 }
 
 export async function fbAddCoupon(c: Coupon) {
+  await ensureAuth()
   await setDoc(doc(db, 'coupons', c.code), clean(c))
 }
 
 export async function fbUpdateCoupon(code: string, patch: Partial<Coupon>) {
+  await ensureAuth()
   await updateDoc(doc(db, 'coupons', code), clean(patch))
 }
 
 export async function fbDeleteCoupon(code: string) {
+  await ensureAuth()
   await deleteDoc(doc(db, 'coupons', code))
 }
 
