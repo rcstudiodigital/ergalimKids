@@ -173,8 +173,8 @@ export default function OwnerProducts() {
 
       {/* ── MODAL DE PRODUTO ────────────────────────────────────────────── */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-3 pt-16 overflow-y-auto">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl animate-fadeUp">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-3 sm:pt-16 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl animate-fadeUp my-auto max-h-[92vh] flex flex-col">
             {/* Header modal */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-black text-brand-navy text-lg">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
@@ -191,7 +191,7 @@ export default function OwnerProducts() {
               ))}
             </div>
 
-            <div className="p-5">
+            <div className="p-5 overflow-y-auto flex-1">
               {/* ── INFORMAÇÕES ──────────────────────────────────────── */}
               {activeTab === 'info' && (
                 <div className="space-y-4">

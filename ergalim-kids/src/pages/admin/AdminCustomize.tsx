@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Palette, Image, Type, Layout, Eye, EyeOff, Save, RotateCcw, Monitor } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
+import ImageUpload from '@/components/ui/ImageUpload'
 import type { SiteTheme, HeroBanner, HomeSection } from '@/types'
 import toast from 'react-hot-toast'
 
@@ -129,18 +130,11 @@ export default function AdminCustomize() {
             {/* Imagem */}
             <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
               <h2 className="font-black text-white flex items-center gap-2"><Image size={16} className="text-brand-pink"/> Imagem de Fundo</h2>
-              <div>
-                <label className="text-xs font-bold text-gray-400 block mb-1">URL da imagem</label>
-                <input value={hero.imageUrl} onChange={e => setHero(h => ({...h, imageUrl: e.target.value}))}
-                  className="input-field bg-gray-800 border-gray-700 text-white text-xs font-mono"
-                  placeholder="https://..."/>
-                <p className="text-xs text-gray-500 mt-1">Cole uma URL do Unsplash, Google Drive ou qualquer imagem pública</p>
-              </div>
-              {hero.imageUrl && (
-                <div className="rounded-xl overflow-hidden aspect-video bg-gray-800">
-                  <img src={hero.imageUrl} alt="Preview" className="w-full h-full object-cover"/>
-                </div>
-              )}
+              <ImageUpload
+                value={hero.imageUrl}
+                onChange={url => setHero(h => ({...h, imageUrl: url}))}
+                folder="ergalim-kids/home"
+              />
               <div>
                 <label className="text-xs font-bold text-gray-400 flex items-center justify-between mb-2">
                   <span>Escurecimento da imagem</span>
@@ -234,14 +228,12 @@ export default function AdminCustomize() {
                   {/* Seção promo — campos extras */}
                   {section.type === 'promo' && (
                     <>
-                      <div>
-                        <label className="text-xs font-bold text-gray-400 block mb-1">URL da imagem do banner</label>
-                        <input value={section.imageUrl || ''} onChange={e => updateSection(section.id, { imageUrl: e.target.value })}
-                          className="input-field bg-gray-800 border-gray-700 text-white text-xs font-mono" placeholder="https://..."/>
-                      </div>
-                      {section.imageUrl && (
-                        <img src={section.imageUrl} alt="" className="w-full h-24 object-cover rounded-xl"/>
-                      )}
+                      <ImageUpload
+                        label="Imagem do banner"
+                        value={section.imageUrl || ''}
+                        onChange={url => updateSection(section.id, { imageUrl: url })}
+                        folder="ergalim-kids/banners"
+                      />
                       <div>
                         <label className="text-xs font-bold text-gray-400 block mb-1">Texto da promoção</label>
                         <input value={section.promoText || ''} onChange={e => updateSection(section.id, { promoText: e.target.value })}

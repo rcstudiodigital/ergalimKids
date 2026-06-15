@@ -112,13 +112,13 @@ export default function AdminProducts() {
 
       {/* Modal Produto */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 pt-16 overflow-y-auto">
-          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp">
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-start justify-center p-4 sm:pt-16 overflow-y-auto">
+          <div className="w-full max-w-xl bg-white rounded-2xl shadow-2xl animate-fadeUp my-auto max-h-[92vh] flex flex-col">
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               <h2 className="font-black text-brand-navy">{editProduct ? 'Editar produto' : 'Novo produto'}</h2>
               <button onClick={()=>setShowForm(false)} className="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-5 space-y-3 overflow-y-auto flex-1">
               <div><label className="text-xs font-bold text-gray-500 block mb-1">Nome *</label><input value={form.name} onChange={e=>setForm(f=>({...f,name:e.target.value}))} className="input-field" placeholder="Nome do produto"/></div>
               <div className="grid grid-cols-2 gap-3">
                 <div><label className="text-xs font-bold text-gray-500 block mb-1">Preço *</label><input type="number" step="0.01" min="0" value={form.price} onChange={e=>setForm(f=>({...f,price:parseFloat(e.target.value)||0}))} className="input-field"/></div>
