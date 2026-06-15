@@ -15,7 +15,6 @@ import type { User, OwnerPermissions } from '@/types'
 import { DEFAULT_OWNER_PERMISSIONS } from '@/data/store'
 import { rateLimit, sanitize } from '@/utils/security'
 
-// Detecta se Firebase está configurado
 const FIREBASE_ENABLED = !!(
   import.meta.env.VITE_FIREBASE_API_KEY &&
   import.meta.env.VITE_FIREBASE_PROJECT_ID
@@ -69,7 +68,6 @@ const STAFF_USERS = [
   { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || 'owner@ergalimkids.com', hash: import.meta.env.VITE_OWNER_PASS || 'Owner@2025!', role: 'owner' as const },
 ]
 
-// ─────────────────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,             setUser]             = useState<User | null>(null)
   const [token,            setToken]            = useState<string | null>(null)
@@ -107,18 +105,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
-              // Buscar perfil completo do Firestore
-              const fb = await import('@/services/firestore')
-              const profile = await fb.fbGetCustomer(firebaseUser.uid)
-              setUser({
-                id:        firebaseUser.uid,
-                name:      profile?.name || firebaseUser.displayName || 'Cliente',
-                email:     firebaseUser.email || '',
-                role:      'customer',
-                createdAt: profile?.createdAt || new Date().toISOString(),
-              })
+              try {
+                const fb = await import('@/services/firestore')
+                const profile = await fb.fbGetCustomer(firebaseUser.uid)
+                setUser({
+                  id:        firebaseUser.uid,
+                  name:      profile?.name || firebaseUser.displayName || 'Cliente',
+                  email:     firebaseUser.email || '',
+                  role:      'customer',
+                  createdAt: profile?.createdAt || new Date().toISOString(),
+                })
+              } catch {
+                setUser({
+                  id:        firebaseUser.uid,
+                  name:      firebaseUser.displayName || 'Cliente',
+                  email:     firebaseUser.email || '',
+                  role:      'customer',
+                  createdAt: new Date().toISOString(),
+                })
+              }
             } else {
-              // Sem usuário Firebase logado — limpar se era cliente
               setUser(prev => (prev?.role === 'customer' ? null : prev))
             }
             setLoading(false)
@@ -140,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!rateLimit('login', 5, 60_000)) throw new Error('Muitas tentativas. Aguarde 1 minuto.')
     const normalEmail = email.trim().toLowerCase()
 
-    // 1. Verificar staff (admin/dono) — autenticação local com JWT
+    // 1. Verificar staff (admin/dono)
     const staff = STAFF_USERS.find(u => u.email.toLowerCase() === normalEmail && u.hash === password)
     if (staff) {
       const { hash: _, ...u } = staff
@@ -152,7 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
 
-    // 2. Verificar clientes via Firebase Auth
+    // 2. Clientes via Firebase Auth
     if (FIREBASE_ENABLED) {
       try {
         const { auth } = await import('@/lib/firebase')
@@ -160,103 +166,126 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const credential = await signInWithEmailAndPassword(auth, normalEmail, password)
         const firebaseUser = credential.user
 
-        // Buscar perfil do Firestore
-        const fb = await import('@/services/firestore')
-        const profile = await fb.fbGetCustomer(firebaseUser.uid)
-
-        setUser({
-          id:        firebaseUser.uid,
-          name:      profile?.name || firebaseUser.displayName || 'Cliente',
-          email:     firebaseUser.email || '',
-          role:      'customer',
-          createdAt: profile?.createdAt || new Date().toISOString(),
-        })
+        try {
+          const fb = await import('@/services/firestore')
+          const profile = await fb.fbGetCustomer(firebaseUser.uid)
+          setUser({
+            id:        firebaseUser.uid,
+            name:      profile?.name || firebaseUser.displayName || 'Cliente',
+            email:     firebaseUser.email || '',
+            role:      'customer',
+            createdAt: profile?.createdAt || new Date().toISOString(),
+          })
+        } catch {
+          setUser({
+            id:    firebaseUser.uid,
+            name:  firebaseUser.displayName || 'Cliente',
+            email: firebaseUser.email || '',
+            role:  'customer',
+            createdAt: new Date().toISOString(),
+          })
+        }
         return
       } catch (err: any) {
-        // Traduzir erros do Firebase para português
         if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
           throw new Error('E-mail ou senha incorretos')
         }
         if (err.code === 'auth/too-many-requests') {
           throw new Error('Muitas tentativas. Aguarde alguns minutos.')
         }
-        throw new Error('Erro ao fazer login. Tente novamente.')
+        throw new Error(err.message || 'Erro ao fazer login. Tente novamente.')
       }
     }
 
-    // Fallback: sem Firebase configurado
     await new Promise(r => setTimeout(r, 300 + Math.random() * 200))
     throw new Error('E-mail ou senha incorretos')
   }, [ownerPermissions])
 
-  // ── Cadastro de cliente (Firebase Auth + Firestore) ───────────────────────
+  // ── Cadastro de cliente ────────────────────────────────────────────────
   const register = useCallback(async (name: string, email: string, password: string, phone: string) => {
     if (!rateLimit('register', 3, 60_000)) throw new Error('Muitas tentativas. Aguarde 1 minuto.')
     const normalEmail = email.trim().toLowerCase()
     const normalName  = sanitize(name.trim())
     const normalPhone = sanitize(phone.trim())
 
-    // Validações
-    if (normalName.length < 2)  throw new Error('Nome deve ter ao menos 2 caracteres')
+    if (normalName.length < 2) throw new Error('Nome deve ter ao menos 2 caracteres')
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalEmail)) throw new Error('E-mail inválido')
-    if (password.length < 8)    throw new Error('Senha deve ter ao menos 8 caracteres')
-    if (!/(?=.*[A-Z])(?=.*[0-9])/.test(password)) throw new Error('Senha precisa de pelo menos uma letra maiúscula e um número')
+    if (password.length < 8) throw new Error('Senha deve ter ao menos 8 caracteres')
 
-    // Verificar se é e-mail de staff
     if (STAFF_USERS.some(u => u.email.toLowerCase() === normalEmail)) {
       throw new Error('Este e-mail não pode ser usado para cadastro')
     }
 
-    if (FIREBASE_ENABLED) {
-      try {
-        const { auth } = await import('@/lib/firebase')
-        const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth')
-
-        // Criar conta no Firebase Auth
-        const credential = await createUserWithEmailAndPassword(auth, normalEmail, password)
-        const firebaseUser = credential.user
-
-        // Atualizar nome no Firebase Auth
-        await updateProfile(firebaseUser, { displayName: normalName })
-
-        // Salvar perfil completo no Firestore
-        const fb = await import('@/services/firestore')
-        const profile = {
-          id:        firebaseUser.uid,
-          name:      normalName,
-          email:     normalEmail,
-          phone:     normalPhone,
-          addresses: [],
-          createdAt: new Date().toISOString(),
-        }
-        await fb.fbSaveCustomer(firebaseUser.uid, profile)
-
-        // Setar usuário logado
-        setUser({
-          id:        firebaseUser.uid,
-          name:      normalName,
-          email:     normalEmail,
-          role:      'customer',
-          createdAt: profile.createdAt,
-        })
-      } catch (err: any) {
-        if (err.code === 'auth/email-already-in-use') {
-          throw new Error('Este e-mail já está cadastrado')
-        }
-        if (err.code === 'auth/weak-password') {
-          throw new Error('Senha muito fraca. Use ao menos 8 caracteres com letras e números')
-        }
-        throw new Error('Erro ao criar conta. Tente novamente.')
-      }
-    } else {
-      // Fallback sem Firebase: avisa que não está configurado
+    if (!FIREBASE_ENABLED) {
       throw new Error('Cadastro indisponível: Firebase não configurado. Contate o suporte.')
+    }
+
+    try {
+      const { auth } = await import('@/lib/firebase')
+      const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth')
+
+      // 1. Criar conta no Firebase Auth
+      const credential = await createUserWithEmailAndPassword(auth, normalEmail, password)
+      const firebaseUser = credential.user
+
+      // 2. Atualizar nome no Firebase Auth
+      try {
+        await updateProfile(firebaseUser, { displayName: normalName })
+      } catch {
+        // Não crítico — continua mesmo se falhar
+      }
+
+      // 3. Salvar perfil no Firestore
+      // ⚠️ Usa as regras abertas de /customers — precisa estar autenticado
+      // O Firebase Auth já autenticou na linha acima, então request.auth.uid está disponível
+      const profile = {
+        id:        firebaseUser.uid,
+        name:      normalName,
+        email:     normalEmail,
+        phone:     normalPhone,
+        addresses: [],
+        createdAt: new Date().toISOString(),
+      }
+
+      try {
+        const fb = await import('@/services/firestore')
+        await fb.fbSaveCustomer(firebaseUser.uid, profile)
+      } catch (firestoreErr: any) {
+        // Perfil não salvo no Firestore mas conta criada — não bloqueia o cadastro
+        console.warn('Aviso: perfil não salvo no Firestore:', firestoreErr?.message)
+      }
+
+      // 4. Setar usuário logado
+      setUser({
+        id:        firebaseUser.uid,
+        name:      normalName,
+        email:     normalEmail,
+        role:      'customer',
+        createdAt: profile.createdAt,
+      })
+
+    } catch (err: any) {
+      // Erros do Firebase Auth
+      if (err.code === 'auth/email-already-in-use') {
+        throw new Error('Este e-mail já está cadastrado')
+      }
+      if (err.code === 'auth/weak-password') {
+        throw new Error('Senha muito fraca. Use ao menos 8 caracteres')
+      }
+      if (err.code === 'auth/invalid-email') {
+        throw new Error('E-mail inválido')
+      }
+      if (err.code === 'auth/network-request-failed') {
+        throw new Error('Sem conexão com a internet. Verifique sua rede.')
+      }
+      // Se já é um erro traduzido (lançado antes do try), repassa direto
+      if (!err.code) throw err
+      throw new Error('Erro ao criar conta: ' + (err.message || 'tente novamente'))
     }
   }, [])
 
   // ── Logout ───────────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    // Deslogar do Firebase se for cliente
     if (user?.role === 'customer' && FIREBASE_ENABLED) {
       try {
         const { auth } = await import('@/lib/firebase')
