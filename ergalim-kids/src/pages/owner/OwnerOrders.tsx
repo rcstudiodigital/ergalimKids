@@ -1,205 +1,237 @@
 import React, { useState } from 'react'
-import { Search, ChevronDown, Package, MessageCircle } from 'lucide-react'
+import { Search, MessageCircle, Package, Truck, CheckCircle, X, ChevronDown } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
+import { sendOrderShippedToCustomer } from '@/services/email'
 import type { OrderStatus } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/security'
-import { sendOrderShippedToCustomer, sendOrderDeliveredToCustomer } from '@/services/email'
 import toast from 'react-hot-toast'
 
-const STATUS_OPTS = [
-  { value:'all',         label:'Todos',       cls:'' },
-  { value:'pending',     label:'Pendente',    cls:'badge-amber' },
-  { value:'paid',        label:'Pago',        cls:'badge-navy' },
-  { value:'processing',  label:'Preparando',  cls:'badge-navy' },
-  { value:'shipped',     label:'Enviado',     cls:'badge-green' },
-  { value:'delivered',   label:'Entregue',    cls:'badge-green' },
-  { value:'cancelled',   label:'Cancelado',   cls:'badge-red' },
+const STATUS_FLOW: { value: OrderStatus; label: string; color: string; bg: string; next?: OrderStatus; nextLabel?: string; nextColor?: string }[] = [
+  { value: 'pending',    label: '⏳ Pendente',    color: 'text-amber-700',  bg: 'bg-amber-100',  next: 'paid',       nextLabel: '✅ Confirmar Pagamento', nextColor: 'bg-blue-500 hover:bg-blue-600' },
+  { value: 'paid',       label: '✅ Pago',         color: 'text-blue-700',   bg: 'bg-blue-100',   next: 'processing', nextLabel: '📦 Em Separação',        nextColor: 'bg-amber-500 hover:bg-amber-600' },
+  { value: 'processing', label: '📦 Em Separação', color: 'text-orange-700', bg: 'bg-orange-100', next: 'shipped',    nextLabel: '🚚 Marcar Enviado',      nextColor: 'bg-purple-500 hover:bg-purple-600' },
+  { value: 'shipped',    label: '🚚 Enviado',      color: 'text-purple-700', bg: 'bg-purple-100', next: 'delivered',  nextLabel: '✅ Confirmar Entrega',    nextColor: 'bg-green-500 hover:bg-green-600' },
+  { value: 'delivered',  label: '🎉 Entregue',     color: 'text-green-700',  bg: 'bg-green-100' },
+  { value: 'cancelled',  label: '❌ Cancelado',    color: 'text-red-700',    bg: 'bg-red-100' },
+]
+
+const FILTER_OPTS = [
+  { value: 'all',        label: 'Todos' },
+  { value: 'pending',    label: '⏳ Pendentes' },
+  { value: 'paid',       label: '✅ Pagos' },
+  { value: 'processing', label: '📦 Em Separação' },
+  { value: 'shipped',    label: '🚚 Enviados' },
+  { value: 'delivered',  label: '🎉 Entregues' },
+  { value: 'cancelled',  label: '❌ Cancelados' },
 ]
 
 export default function OwnerOrders() {
   const { orders, updateOrder } = useStore()
-  const [search, setSearch]         = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [trackingInputs, setTrackingInputs] = useState<Record<string,string>>({})
+  const [search, setSearch] = useState('')
+  const [filter, setFilter] = useState('all')
+  const [trackingInputs, setTrackingInputs] = useState<Record<string, string>>({})
 
   const filtered = orders.filter(o => {
-    const ms = o.id.includes(search) || o.customerName.toLowerCase().includes(search.toLowerCase())
-    const st = statusFilter === 'all' || o.status === statusFilter
-    return ms && st
+    const matchFilter = filter === 'all' || o.status === filter
+    const matchSearch = !search || o.id.includes(search) ||
+      o.customerName?.toLowerCase().includes(search.toLowerCase()) ||
+      o.customerEmail?.toLowerCase().includes(search.toLowerCase())
+    return matchFilter && matchSearch
   })
 
-  const handleShipped = async (order: typeof orders[0]) => {
-    const code = trackingInputs[order.id]?.trim() || ''
-    updateOrder(order.id, { status: 'shipped', trackingCode: code || undefined })
+  const pendingCount = orders.filter(o => o.status === 'pending').length
 
-    // Dispara e-mail automático para o cliente
-    const ok = await sendOrderShippedToCustomer({
-      customerName:  order.customerName,
-      customerEmail: order.customerEmail,
-      orderId:       order.id,
-      trackingCode:  code || undefined,
-      shippingMethod: 'Correios',
-    })
+  const getStatus = (status: OrderStatus) => STATUS_FLOW.find(s => s.value === status) || STATUS_FLOW[0]
 
-    if (ok) toast.success(`✅ Pedido ${order.id} marcado como enviado! E-mail enviado para ${order.customerEmail}`)
-    else    toast.success(`✅ Pedido ${order.id} marcado como enviado!`)
+  const handleNextStatus = async (order: typeof orders[0]) => {
+    const current = getStatus(order.status)
+    if (!current.next) return
+
+    // Se for enviar, pede código de rastreio
+    if (current.next === 'shipped') {
+      const code = trackingInputs[order.id]?.trim()
+      await updateOrder(order.id, { status: 'shipped', trackingCode: code || undefined })
+      // Enviar email de rastreio para o cliente
+      sendOrderShippedToCustomer({
+        customerName: order.customerName,
+        customerEmail: order.customerEmail,
+        orderId: order.id,
+        trackingCode: code || 'Em breve disponível',
+        items: order.items?.map((i: any) => ({ productName: i.productName, quantity: i.quantity, size: i.size })) || [],
+      }).catch(() => {})
+      toast.success(`🚚 Pedido ${order.id} marcado como enviado! E-mail enviado ao cliente.`)
+      return
+    }
+
+    await updateOrder(order.id, { status: current.next })
+
+    const statusLabel = STATUS_FLOW.find(s => s.value === current.next)?.label || ''
+    toast.success(`${statusLabel} — Pedido ${order.id} atualizado!`)
   }
 
-  const handleDelivered = async (order: typeof orders[0]) => {
-    updateOrder(order.id, { status: 'delivered' })
-
-    const ok = await sendOrderDeliveredToCustomer({
-      customerName:  order.customerName,
-      customerEmail: order.customerEmail,
-      orderId:       order.id,
-    })
-
-    if (ok) toast.success(`✅ Pedido ${order.id} marcado como entregue! E-mail enviado ao cliente`)
-    else    toast.success(`✅ Pedido ${order.id} marcado como entregue!`)
-  }
-
-  const cancelOrder = (order: typeof orders[0]) => {
-    if (!confirm(`Cancelar o pedido ${order.id}? Esta ação não pode ser desfeita.`)) return
-    updateOrder(order.id, { status: 'cancelled' })
+  const handleCancel = async (order: typeof orders[0]) => {
+    if (!confirm(`Cancelar o pedido ${order.id} de ${order.customerName}?`)) return
+    await updateOrder(order.id, { status: 'cancelled' })
     toast.success('Pedido cancelado')
   }
 
-  const pending = orders.filter(o => o.status === 'pending').length
-  const shipped  = orders.filter(o => o.status === 'shipped').length
-
   return (
-    <div className="space-y-6 animate-fadeUp">
+    <div className="space-y-5 animate-fadeUp">
+      {/* Header */}
       <div>
         <h1 className="text-2xl font-black text-brand-navy">Pedidos</h1>
-        <div className="flex gap-4 mt-2">
-          <span className="text-sm text-gray-500">{orders.length} pedidos no total</span>
-          {pending > 0 && <span className="badge badge-amber">{pending} pendente{pending > 1 ? 's' : ''}</span>}
-          {shipped > 0 && <span className="badge badge-navy">{shipped} em trânsito</span>}
-        </div>
+        <p className="text-sm text-gray-400 mt-0.5">
+          {orders.length} pedidos no total
+          {pendingCount > 0 && <span className="ml-2 badge badge-yellow">{pendingCount} pendente{pendingCount > 1 ? 's' : ''}</span>}
+        </p>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1 max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar pedido ou cliente..." className="input-field pl-9 py-2"/>
+      <div className="flex gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"/>
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar pedido ou cliente..."
+            className="input-field pl-9 py-2 text-sm w-full"/>
         </div>
         <div className="relative">
-          <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="input-field py-2 pr-8 appearance-none">
-            {STATUS_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+          <select value={filter} onChange={e => setFilter(e.target.value)}
+            className="input-field py-2 pr-8 text-sm appearance-none bg-white text-brand-navy font-bold border-2 border-gray-200">
+            {FILTER_OPTS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
-          <ChevronDown size={14} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
+          <ChevronDown size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"/>
         </div>
       </div>
 
-      {/* Lista de pedidos */}
+      {/* Lista */}
       {filtered.length === 0 ? (
-        <div className="card p-12 text-center text-gray-400">
-          <Package size={40} className="mx-auto mb-3 opacity-20"/>
-          <p className="font-semibold">Nenhum pedido encontrado</p>
+        <div className="card p-12 text-center">
+          <Package size={32} className="text-gray-300 mx-auto mb-3"/>
+          <p className="font-bold text-gray-400">Nenhum pedido encontrado</p>
         </div>
       ) : (
         <div className="space-y-4">
           {filtered.map(order => {
-            const st = STATUS_OPTS.find(s => s.value === order.status)
+            const st = getStatus(order.status)
+            const isCancelled = order.status === 'cancelled'
+            const isDelivered = order.status === 'delivered'
+
             return (
-              <div key={order.id} className="card p-5">
-                {/* Cabeçalho */}
-                <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-black text-brand-pink">{order.id}</p>
-                      {st && <span className={`badge ${st.cls}`}>{st.label}</span>}
-                    </div>
-                    <p className="text-sm font-bold text-brand-navy mt-0.5">{order.customerName}</p>
-                    <p className="text-xs text-gray-400">{order.customerEmail} · {order.customerPhone}</p>
-                    <p className="text-xs text-gray-400">{formatDate(order.createdAt)}</p>
+              <div key={order.id} className={`card p-5 ${isCancelled ? 'opacity-60' : ''}`}>
+                
+                {/* Linha 1: ID + Status + Valor */}
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-brand-pink text-base">{order.id}</span>
+                    <span className={`text-xs font-black px-3 py-1 rounded-full ${st.bg} ${st.color}`}>{st.label}</span>
+                    {order.trackingCode && (
+                      <span className="text-xs font-bold bg-gray-100 text-gray-600 px-2 py-0.5 rounded-lg">
+                        📦 {order.trackingCode}
+                      </span>
+                    )}
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-brand-navy text-lg">{formatCurrency(order.total)}</p>
-                    <p className="text-xs text-gray-400">{order.paymentMethod === 'pix' ? '🔵 Pix' : '💳 Cartão'}</p>
+                    <span className="font-black text-brand-navy text-lg">{formatCurrency(order.total)}</span>
+                    <p className="text-xs text-gray-400">{order.paymentMethod === 'pix' ? '🔵 Pix' : order.paymentMethod === 'whatsapp' ? '💬 WhatsApp' : '💳 Cartão'}</p>
                   </div>
                 </div>
 
-                {/* Itens */}
-                <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
-                  {order.items.map((item, i) => (
-                    <div key={i} className="shrink-0 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
-                      <img src={item.image || item.productImage || ""} alt="" className="w-10 h-10 rounded-xl object-cover bg-gray-100 border border-gray-200"/>
+                {/* Linha 2: Cliente */}
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div>
+                    <p className="font-bold text-brand-navy text-sm">{order.customerName}</p>
+                    <p className="text-xs text-gray-400">{order.customerEmail} · {formatDate(order.createdAt)}</p>
+                  </div>
+                  {/* Botão WhatsApp do cliente */}
+                  {order.customerPhone && (
+                    <a href={`https://wa.me/55${order.customerPhone.replace(/\D/g,'')}?text=${encodeURIComponent(`Olá ${order.customerName}! 👋 Sou o Gabriel da Ergalim Kids.\n\nSeu pedido *${order.id}* está sendo tratado com carinho! 💕\n\nTotal: ${formatCurrency(order.total)}\n\nQualquer dúvida estou aqui! 😊`)}`}
+                      target="_blank" rel="noreferrer"
+                      className="flex items-center gap-1.5 text-xs font-black text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-xl transition-colors shrink-0">
+                      <MessageCircle size={13}/> WhatsApp
+                    </a>
+                  )}
+                </div>
+
+                {/* Linha 3: Produtos */}
+                <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+                  {order.items?.map((item, i) => (
+                    <div key={i} className="shrink-0 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2 border border-gray-100">
+                      {(item.image || item.productImage) && (
+                        <img src={item.image || item.productImage} alt="" className="w-10 h-10 rounded-lg object-cover bg-gray-200"/>
+                      )}
                       <div className="text-xs">
                         <p className="font-bold text-brand-navy line-clamp-1 max-w-[120px]">{item.productName}</p>
                         <p className="text-gray-400">{item.size} · {item.color} · ×{item.quantity}</p>
+                        <p className="font-bold text-brand-pink">{formatCurrency(item.price * item.quantity)}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                {/* Endereço */}
-                <div className="text-xs text-gray-500 mb-4 p-3 bg-gray-50 rounded-xl">
-                  📍 {order.shippingAddress.street}, {order.shippingAddress.number} · {order.shippingAddress.neighborhood} · {order.shippingAddress.city}/{order.shippingAddress.state} · CEP {order.shippingAddress.zipCode}
-                </div>
+                {/* Linha 4: Endereço */}
+                {order.shippingAddress && (
+                  <div className="text-xs text-gray-500 mb-4 p-3 bg-gray-50 rounded-xl">
+                    📍 {order.shippingAddress.street}, {order.shippingAddress.number}
+                    {order.shippingAddress.complement ? `, ${order.shippingAddress.complement}` : ''} ·{' '}
+                    {order.shippingAddress.neighborhood} · {order.shippingAddress.city}/{order.shippingAddress.state} · CEP {order.shippingAddress.zipCode}
+                  </div>
+                )}
 
-                {/* Ações */}
-                <div className="flex flex-wrap gap-2 items-center">
+                {/* Linha 5: AÇÕES — Fluxo de status */}
+                {!isCancelled && !isDelivered && (
+                  <div className="border-t border-gray-100 pt-4">
+                    {/* Fluxo visual */}
+                    <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+                      {STATUS_FLOW.filter(s => s.value !== 'cancelled').map((s, i, arr) => {
+                        const currentIdx = arr.findIndex(x => x.value === order.status)
+                        const thisIdx = i
+                        const isDone = thisIdx < currentIdx
+                        const isCurrent = thisIdx === currentIdx
+                        return (
+                          <React.Fragment key={s.value}>
+                            <div className={`text-xs font-bold px-2 py-1 rounded-lg whitespace-nowrap ${isCurrent ? s.bg + ' ' + s.color : isDone ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-300'}`}>
+                              {isDone ? '✓ ' : ''}{s.label.split(' ').slice(1).join(' ')}
+                            </div>
+                            {i < arr.length - 1 && <div className={`text-xs ${isDone ? 'text-green-400' : 'text-gray-200'}`}>→</div>}
+                          </React.Fragment>
+                        )
+                      })}
+                    </div>
 
-                  {/* WhatsApp do cliente */}
-                  {order.customerPhone && (
-                    <a
-                      href={`https://wa.me/55${order.customerPhone.replace(/\D/g,'')}?text=${encodeURIComponent(`Olá ${order.customerName}! Sou o Gabriel da Ergalim Kids 👋\n\nSeu pedido *${order.id}* está sendo preparado com carinho!\n\nTotal: R$ ${order.total?.toFixed(2)?.replace('.',',')}\n\nQualquer dúvida estou aqui! 😊`)}`}
-                      target="_blank" rel="noreferrer"
-                      className="flex items-center gap-1.5 text-xs font-black text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-xl transition-colors">
-                      <MessageCircle size={13}/> WhatsApp cliente
-                    </a>
-                  )}
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {/* Campo de rastreio se for enviar */}
+                      {order.status === 'processing' && (
+                        <input
+                          placeholder="Código de rastreio (ex: AA123456789BR) — opcional"
+                          value={trackingInputs[order.id] || ''}
+                          onChange={e => setTrackingInputs(t => ({...t, [order.id]: e.target.value}))}
+                          className="text-xs border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-brand-pink focus:outline-none flex-1 min-w-[220px]"
+                        />
+                      )}
 
-                  {/* Pendente → confirmar pagamento */}
-                  {order.status === 'pending' && (
-                    <button onClick={() => { updateOrder(order.id, { status: 'paid' }); toast.success('Pagamento confirmado! ✅') }}
-                      className="text-xs font-black text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-xl transition-colors">
-                      ✅ Confirmar Pagamento
-                    </button>
-                  )}
+                      {/* Botão de avançar status */}
+                      {st.next && (
+                        <button onClick={() => handleNextStatus(order)}
+                          className={`text-xs font-black text-white px-4 py-2.5 rounded-xl transition-colors ${st.nextColor}`}>
+                          {st.nextLabel}
+                        </button>
+                      )}
 
-                  {/* Pago/Processando → marcar em preparo + enviado */}
-                  {(order.status === 'paid' || order.status === 'processing') && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <button onClick={() => { updateOrder(order.id, { status: 'processing' }); toast.success('Status: Em preparo 📦') }}
-                        className="text-xs font-black text-white bg-amber-500 hover:bg-amber-600 px-3 py-2 rounded-xl transition-colors">
-                        📦 Em Preparo
-                      </button>
-                      <input
-                        placeholder="Código de rastreio (ex: AA123456789BR)"
-                        value={trackingInputs[order.id] || ''}
-                        onChange={e => setTrackingInputs(t => ({...t, [order.id]: e.target.value}))}
-                        className="text-xs border-2 border-gray-200 rounded-xl px-3 py-2 focus:border-brand-pink focus:outline-none w-56"
-                      />
-                      <button onClick={() => handleShipped(order)} className="btn-navy text-xs py-2 px-4">
-                        🚚 Marcar como Enviado
+                      {/* Cancelar */}
+                      <button onClick={() => handleCancel(order)}
+                        className="text-xs font-bold text-red-400 hover:text-red-600 px-3 py-2 rounded-xl hover:bg-red-50 transition-colors ml-auto">
+                        <X size={14} className="inline mr-1"/>Cancelar
                       </button>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Enviado → marcar entregue */}
-                  {order.status === 'shipped' && (
-                    <button onClick={() => handleDelivered(order)} className="btn-navy text-xs py-2 px-4">
-                      ✅ Confirmar Entrega
-                    </button>
-                  )}
-
-                  {/* Código de rastreio */}
-                  {order.trackingCode && (
-                    <span className="text-xs bg-blue-50 text-blue-700 px-3 py-2 rounded-xl font-mono font-bold border border-blue-200">
-                      📦 {order.trackingCode}
-                    </span>
-                  )}
-
-                  {/* Cancelar (só para pendentes/pagos) */}
-                  {['pending','paid','processing'].includes(order.status) && (
-                    <button onClick={() => cancelOrder(order)} className="text-xs text-red-400 hover:text-red-600 px-3 py-2 rounded-xl hover:bg-red-50 transition-colors ml-auto">
-                      Cancelar
-                    </button>
-                  )}
-                </div>
+                {/* Pedido entregue */}
+                {isDelivered && (
+                  <div className="border-t border-gray-100 pt-3 flex items-center gap-2">
+                    <CheckCircle size={16} className="text-green-500"/>
+                    <span className="text-sm font-bold text-green-600">Pedido entregue com sucesso!</span>
+                  </div>
+                )}
               </div>
             )
           })}

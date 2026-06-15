@@ -31,7 +31,7 @@ export default function OwnerShipping() {
   const handleUpdate = () => {
     if (!editForm) return
     if (!editForm.name.trim()) { toast.error('Nome é obrigatório'); return }
-    updateShippingOption(editForm)
+    updateShippingOption(editForm.id, editForm)
     setEditingId(null)
     setEditForm(null)
     toast.success('Opção de entrega salva!')
@@ -44,7 +44,7 @@ export default function OwnerShipping() {
   }
 
   const handleToggle = (opt: ShippingOption) => {
-    updateShippingOption({ ...opt, active: !opt.active })
+    updateShippingOption(opt.id, { active: !opt.active })
     toast.success(opt.active ? 'Opção desativada' : 'Opção ativada')
   }
 
