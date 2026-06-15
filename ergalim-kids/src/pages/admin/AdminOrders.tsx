@@ -88,7 +88,7 @@ export default function AdminOrders() {
             <div className="flex flex-wrap gap-2 items-center">
               {/* Mudar status */}
               <select value={order.status} onChange={e=>handleStatus(order.id, e.target.value as OrderStatus)}
-                className="text-xs border-2 border-gray-200 rounded-lg px-2 py-1.5 font-bold focus:border-brand-pink focus:outline-none">
+                className="text-xs bg-white text-brand-navy border-2 border-gray-200 rounded-lg px-2 py-1.5 font-bold focus:border-brand-pink focus:outline-none">
                 {STATUS_OPTS.filter(o=>o.value!=='all').map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
 
