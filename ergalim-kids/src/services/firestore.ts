@@ -78,8 +78,10 @@ export async function fbGetOrders(): Promise<Order[]> {
 
 export async function fbAddOrder(o: Omit<Order, 'id'>): Promise<string> {
   await ensureAuth()
-  const id = `EK-${Date.now().toString().slice(-6)}`
-  await setDoc(doc(db, 'orders', id), clean({ ...o, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }))
+  // Usa o id e createdAt que já vêm do contexto (string ISO previsível).
+  // Não usa serverTimestamp para evitar datas nulas durante o snapshot.
+  const id = (o as any).id || `EK-${Date.now().toString().slice(-6)}`
+  await setDoc(doc(db, 'orders', id), clean({ ...o }))
   return id
 }
 
