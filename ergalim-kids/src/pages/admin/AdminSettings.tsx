@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Settings, CreditCard, Save, ExternalLink, CheckCircle, AlertCircle, Zap } from 'lucide-react'
+import { Settings, CreditCard, Save, ExternalLink, CheckCircle, AlertCircle, Zap, Store, Instagram, Phone, MapPin, Mail } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
 import toast from 'react-hot-toast'
 
@@ -55,6 +55,76 @@ export default function AdminSettings() {
           <Settings size={22} className="text-brand-pink"/> Configurações Globais (Admin)
         </h1>
         <p className="text-sm text-gray-400 mt-1">Somente você (admin) vê e edita esta área.</p>
+      </div>
+
+      {/* INFORMAÇÕES DA LOJA & REDES SOCIAIS */}
+      <div className="bg-gray-900 border border-gray-800 rounded-2xl p-5 space-y-4">
+        <h2 className="font-black text-white flex items-center gap-2">
+          <Store size={18} className="text-brand-pink"/> Informações da Loja
+        </h2>
+
+        {/* Nome */}
+        <div>
+          <label className="text-xs font-black text-gray-400 block mb-1">🏪 Nome da loja</label>
+          <input value={form.storeName || ''} onChange={e => setForm(f => ({...f, storeName: e.target.value}))}
+            className="input-field bg-gray-800 border-gray-700 text-white" placeholder="Ergalim Kids"/>
+        </div>
+
+        {/* Instagram */}
+        <div>
+          <label className="text-xs font-black text-gray-400 block mb-1">📸 Instagram</label>
+          <div className="relative">
+            <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 font-bold text-sm">@</span>
+            <input
+              value={(form.storeInstagram || '').replace('@', '')}
+              onChange={e => setForm(f => ({...f, storeInstagram: '@' + e.target.value.replace('@', '')}))}
+              className="input-field bg-gray-800 border-gray-700 text-white pl-8"
+              placeholder="ergalimkids"/>
+          </div>
+          {form.storeInstagram && (
+            <a href={`https://instagram.com/${(form.storeInstagram || '').replace('@', '')}`}
+              target="_blank" rel="noreferrer"
+              className="inline-flex items-center gap-1 mt-2 text-xs font-black text-brand-pink hover:underline">
+              📸 instagram.com/{(form.storeInstagram || '').replace('@', '')} ↗
+            </a>
+          )}
+        </div>
+
+        {/* WhatsApp */}
+        <div className="grid sm:grid-cols-2 gap-3">
+          <div>
+            <label className="text-xs font-black text-gray-400 block mb-1">📱 Telefone (exibido)</label>
+            <input value={form.storePhone || ''} onChange={e => setForm(f => ({...f, storePhone: e.target.value}))}
+              className="input-field bg-gray-800 border-gray-700 text-white" placeholder="(21) 99211-0726"/>
+          </div>
+          <div>
+            <label className="text-xs font-black text-gray-400 block mb-1">💬 WhatsApp (só números)</label>
+            <input value={form.storeWhatsapp || ''} onChange={e => setForm(f => ({...f, storeWhatsapp: e.target.value.replace(/\D/g, '')}))}
+              className="input-field bg-gray-800 border-gray-700 text-white font-mono" placeholder="5521992110726"/>
+          </div>
+        </div>
+        {form.storeWhatsapp && (
+          <a href={`https://wa.me/${form.storeWhatsapp}`} target="_blank" rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-black text-green-400 hover:underline">
+            💬 wa.me/{form.storeWhatsapp} ↗
+          </a>
+        )}
+
+        {/* E-mail e Endereço */}
+        <div>
+          <label className="text-xs font-black text-gray-400 block mb-1">📧 E-mail de contato</label>
+          <input value={form.storeEmail || ''} onChange={e => setForm(f => ({...f, storeEmail: e.target.value}))}
+            className="input-field bg-gray-800 border-gray-700 text-white" placeholder="contato@ergalimkids.com" type="email"/>
+        </div>
+        <div>
+          <label className="text-xs font-black text-gray-400 block mb-1">📍 Endereço da loja</label>
+          <input value={form.storeAddress || ''} onChange={e => setForm(f => ({...f, storeAddress: e.target.value}))}
+            className="input-field bg-gray-800 border-gray-700 text-white" placeholder="Rua, número - Bairro"/>
+        </div>
+
+        <div className="p-3 bg-blue-900/20 border border-blue-800/40 rounded-xl text-xs text-blue-300 font-bold">
+          💡 Após salvar, o Instagram e WhatsApp atualizam automaticamente no rodapé e no botão flutuante da loja.
+        </div>
       </div>
 
       {/* GATEWAY DE PAGAMENTO — Cashout */}
@@ -169,6 +239,26 @@ export default function AdminSettings() {
       <button onClick={save} disabled={saving} className="btn-primary w-full flex items-center justify-center gap-2 py-4 text-base">
         {saving ? <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"/> Salvando...</> : <><Save size={18}/> Salvar todas as configurações</>}
       </button>
+
+      {/* Zona de perigo */}
+      <div className="bg-red-950/40 border-2 border-red-900/50 rounded-2xl p-5 space-y-3">
+        <h2 className="font-black text-red-400 flex items-center gap-2">⚠️ Zona de Perigo</h2>
+        <p className="text-xs text-gray-400">
+          Limpa os dados salvos no navegador deste dispositivo (cache local).
+          Use se aparecerem produtos ou pedidos de teste antigos. Não afeta os dados na nuvem (Firebase).
+        </p>
+        <button
+          onClick={() => {
+            if (!confirm('Limpar todos os dados locais deste navegador? Os dados na nuvem (Firebase) NÃO serão afetados.')) return
+            ;['ek_products','ek_orders','ek_settings','ek_coupons','ek_permissions'].forEach(k => localStorage.removeItem(k))
+            alert('Dados locais limpos! A página vai recarregar.')
+            window.location.reload()
+          }}
+          className="w-full py-3 rounded-2xl border-2 border-red-700 text-red-400 font-black text-sm hover:bg-red-900/30 transition-colors"
+        >
+          🗑️ Limpar dados locais deste dispositivo
+        </button>
+      </div>
     </div>
   )
 }

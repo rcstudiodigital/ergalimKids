@@ -26,28 +26,25 @@ interface SendEmailParams {
 }
 
 async function sendEmail({ to, subject, html }: SendEmailParams): Promise<boolean> {
-  // Em dev sem chave: apenas simula
-  if (IS_DEV && !RESEND_KEY) {
-    console.group(`📧 [EMAIL SIMULADO]`)
+  // Em dev local: apenas simula e loga no console (não envia de verdade)
+  if (IS_DEV) {
+    console.group(`📧 [EMAIL SIMULADO - dev local]`)
     console.log(`Para: ${to}`)
     console.log(`Assunto: ${subject}`)
-    console.log(`Conteúdo HTML:`, html.replace(/<[^>]*>/g, '').slice(0, 200) + '...')
     console.groupEnd()
     return true
   }
 
+  // Em produção: chama a função serverless da Vercel (segura, sem expor chave)
   try {
-    const res = await fetch('https://api.resend.com/emails', {
+    const res = await fetch('/api/send-email', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_KEY}`,
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        from: `${STORE_NAME} <noreply@ergalimkids.com.br>`,
         to,
         subject,
         html,
+        from: `${STORE_NAME} <noreply@ergalimkids.com>`,
       }),
     })
     return res.ok
