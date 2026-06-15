@@ -40,7 +40,8 @@ export async function fbDeleteProduct(id: string) {
 export function fbWatchProducts(cb: (products: Product[]) => void): Unsubscribe {
   return onSnapshot(
     query(productsRef(), orderBy('createdAt', 'desc')),
-    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as Product)))
+    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as Product))),
+    err => console.warn('Watch produtos:', err.code)
   )
 }
 
@@ -65,7 +66,8 @@ export async function fbUpdateOrder(id: string, patch: Partial<Order>) {
 export function fbWatchOrders(cb: (orders: Order[]) => void): Unsubscribe {
   return onSnapshot(
     query(ordersRef(), orderBy('createdAt', 'desc')),
-    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as Order)))
+    snap => cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as Order))),
+    err => console.warn('Watch pedidos (normal se nao logado):', err.code)
   )
 }
 
@@ -84,7 +86,8 @@ export async function fbUpdateSettings(patch: Partial<SiteSettings>) {
 export function fbWatchSettings(cb: (s: Partial<SiteSettings>) => void): Unsubscribe {
   return onSnapshot(
     doc(db, 'settings', 'main'),
-    snap => { if (snap.exists()) cb(snap.data() as Partial<SiteSettings>) }
+    snap => { if (snap.exists()) cb(snap.data() as Partial<SiteSettings>) },
+    err => console.warn('Watch settings:', err.code)
   )
 }
 

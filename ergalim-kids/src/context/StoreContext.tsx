@@ -63,22 +63,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   // ── Firebase: watch em tempo real de tudo ──────────────────────────────
   useEffect(() => {
     if (!FIREBASE_ENABLED) return
-    let unsub1: any, unsub2: any, unsub3: any, unsub4: any
+    let unsub1: any, unsub2: any, unsub3: any, unsub4: any, unsubAuth: any
 
-    import('@/services/firestore').then(fb => {
-      // Watch produtos em tempo real
+    import('@/services/firestore').then(async fb => {
+      // PÚBLICO (não precisa de login): produtos, settings, cupons
       unsub1 = fb.fbWatchProducts(p => {
         setProducts(p)
         save('ek_products', p)
       })
 
-      // Watch pedidos em tempo real
-      unsub2 = fb.fbWatchOrders(o => {
-        setOrders(o)
-        save('ek_orders', o)
-      })
-
-      // ✅ Watch settings em tempo real — mudança no admin aparece em todos os dispositivos
       unsub3 = fb.fbWatchSettings(s => {
         setSettings(prev => {
           const merged = { ...prev, ...s }
@@ -87,16 +80,36 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })
       })
 
-      // ✅ Watch cupons em tempo real
       unsub4 = fb.fbWatchCoupons(c => {
         setCoupons(c)
         save('ek_coupons', c)
+      })
+
+      // PRIVADO (só logado): pedidos. Observa apenas quando há sessão Firebase,
+      // evitando o erro "permission-denied" para visitantes da loja.
+      const { auth } = await import('@/lib/firebase')
+      const { onAuthStateChanged } = await import('firebase/auth')
+      unsubAuth = onAuthStateChanged(auth, (fbUser) => {
+        if (fbUser) {
+          // Usuário autenticado → pode observar pedidos
+          if (!unsub2) {
+            unsub2 = fb.fbWatchOrders(o => {
+              setOrders(o)
+              save('ek_orders', o)
+            })
+          }
+        } else {
+          // Sem login → para de observar pedidos
+          unsub2?.()
+          unsub2 = null
+        }
       })
 
       setFbLoaded(true)
     }).catch(() => setFbLoaded(true))
 
     return () => {
+      unsubAuth?.()
       unsub1?.()
       unsub2?.()
       unsub3?.()
