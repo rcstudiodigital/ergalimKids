@@ -34,17 +34,22 @@ export async function uploadImage(
   }
 
   const formData = new FormData()
-  formData.append('file',           file)
-  formData.append('upload_preset',  UPLOAD_PRESET)
-  formData.append('folder',         folder)
-  formData.append('transformation', 'q_auto,f_auto,w_800')  // otimiza automaticamente
+  formData.append('file',          file)
+  formData.append('upload_preset', UPLOAD_PRESET)
+  // NÃO enviar 'folder' nem 'transformation' aqui:
+  // presets Unsigned não permitem esses parâmetros na requisição (erro 400).
+  // A pasta já está configurada no próprio preset (ergalim_kids → ergalim-kids).
 
   const res = await fetch(
     `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
     { method: 'POST', body: formData }
   )
 
-  if (!res.ok) throw new Error('Falha no upload da imagem')
+  if (!res.ok) {
+    const errData = await res.json().catch(() => ({}))
+    console.error('Cloudinary erro:', errData)
+    throw new Error(errData?.error?.message || 'Falha no upload da imagem')
+  }
 
   const data = await res.json()
   return {
