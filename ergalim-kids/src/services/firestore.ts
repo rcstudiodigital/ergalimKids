@@ -1,12 +1,12 @@
 /**
  * Firestore Service — CRUD para todas as coleções
- * 
+ *
  * Coleções:
  *   /products    → produtos da loja
  *   /orders      → pedidos
  *   /settings    → configuração única da loja (doc "main")
  *   /coupons     → cupons de desconto
- *   /customers   → perfil dos clientes
+ *   /customers   → perfil dos clientes (sincronizado via Firebase Auth)
  */
 import {
   collection, doc, getDocs, getDoc, addDoc, setDoc,
@@ -14,7 +14,7 @@ import {
   serverTimestamp, Unsubscribe
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
-import type { Product, Order, SiteSettings, Coupon } from '@/types'
+import type { Product, Order, SiteSettings, Coupon, CustomerProfile } from '@/types'
 
 // ── PRODUTOS ────────────────────────────────────────────────────────────────
 export const productsRef = () => collection(db, 'products')
@@ -24,7 +24,7 @@ export async function fbGetProducts(): Promise<Product[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Product))
 }
 
-export async function fbAddProduct(p: Omit<Product,'id'>): Promise<string> {
+export async function fbAddProduct(p: Omit<Product, 'id'>): Promise<string> {
   const ref = await addDoc(productsRef(), { ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
   return ref.id
 }
@@ -52,7 +52,7 @@ export async function fbGetOrders(): Promise<Order[]> {
   return snap.docs.map(d => ({ id: d.id, ...d.data() } as Order))
 }
 
-export async function fbAddOrder(o: Omit<Order,'id'>): Promise<string> {
+export async function fbAddOrder(o: Omit<Order, 'id'>): Promise<string> {
   const id = `EK-${Date.now().toString().slice(-6)}`
   await setDoc(doc(db, 'orders', id), { ...o, createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
   return id
@@ -72,11 +72,20 @@ export function fbWatchOrders(cb: (orders: Order[]) => void): Unsubscribe {
 // ── CONFIGURAÇÕES ────────────────────────────────────────────────────────────
 export async function fbGetSettings(): Promise<Partial<SiteSettings>> {
   const snap = await getDoc(doc(db, 'settings', 'main'))
-  return snap.exists() ? snap.data() as Partial<SiteSettings> : {}
+  return snap.exists() ? (snap.data() as Partial<SiteSettings>) : {}
 }
 
 export async function fbUpdateSettings(patch: Partial<SiteSettings>) {
   await setDoc(doc(db, 'settings', 'main'), patch, { merge: true })
+}
+
+// ✅ NOVO: Watch de settings em tempo real — qualquer mudança no admin
+//    aparece em todos os dispositivos sem precisar recarregar
+export function fbWatchSettings(cb: (s: Partial<SiteSettings>) => void): Unsubscribe {
+  return onSnapshot(
+    doc(db, 'settings', 'main'),
+    snap => { if (snap.exists()) cb(snap.data() as Partial<SiteSettings>) }
+  )
 }
 
 // ── CUPONS ───────────────────────────────────────────────────────────────────
@@ -99,12 +108,31 @@ export async function fbDeleteCoupon(code: string) {
   await deleteDoc(doc(db, 'coupons', code))
 }
 
-// ── PERFIL DO CLIENTE ────────────────────────────────────────────────────────
-export async function fbGetCustomer(userId: string) {
-  const snap = await getDoc(doc(db, 'customers', userId))
-  return snap.exists() ? snap.data() : null
+// ✅ NOVO: Watch de cupons em tempo real
+export function fbWatchCoupons(cb: (coupons: Coupon[]) => void): Unsubscribe {
+  return onSnapshot(
+    couponsRef(),
+    snap => cb(snap.docs.map(d => ({ ...d.data() } as Coupon)))
+  )
 }
 
-export async function fbSaveCustomer(userId: string, data: object) {
-  await setDoc(doc(db, 'customers', userId), data, { merge: true })
+// ── PERFIL DO CLIENTE ────────────────────────────────────────────────────────
+// ✅ Agora os clientes são salvos no Firestore (coleção /customers)
+//    em vez de localStorage — funcionando em qualquer dispositivo
+
+export async function fbGetCustomer(userId: string): Promise<CustomerProfile | null> {
+  const snap = await getDoc(doc(db, 'customers', userId))
+  return snap.exists() ? (snap.data() as CustomerProfile) : null
+}
+
+export async function fbSaveCustomer(userId: string, data: Partial<CustomerProfile>) {
+  await setDoc(doc(db, 'customers', userId), { ...data, updatedAt: serverTimestamp() }, { merge: true })
+}
+
+// ✅ NOVO: Watch do perfil do cliente em tempo real
+export function fbWatchCustomer(userId: string, cb: (profile: CustomerProfile | null) => void): Unsubscribe {
+  return onSnapshot(
+    doc(db, 'customers', userId),
+    snap => cb(snap.exists() ? (snap.data() as CustomerProfile) : null)
+  )
 }

@@ -1,8 +1,13 @@
 /**
  * StoreContext — com Firebase Firestore
- * 
- * Se Firebase configurado: dados na nuvem em tempo real
- * Se não configurado: dados no localStorage (modo local)
+ *
+ * Se Firebase configurado: dados na nuvem em tempo real (todos os dispositivos sincronizados)
+ * Se não configurado: dados no localStorage (modo local/dev)
+ *
+ * ✅ Produtos     → Firebase (watch em tempo real)
+ * ✅ Pedidos      → Firebase (watch em tempo real)
+ * ✅ Settings     → Firebase (watch em tempo real) ← CORRIGIDO
+ * ✅ Cupons       → Firebase (watch em tempo real) ← CORRIGIDO
  */
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { Product, Order, SiteSettings, OwnerPermissions, Coupon, ShippingOption } from '@/types'
@@ -55,30 +60,54 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [coupons,          setCoupons]          = useState<Coupon[]>(() => load('ek_coupons', INITIAL_COUPONS))
   const [fbLoaded,         setFbLoaded]         = useState(!FIREBASE_ENABLED)
 
-  // ── Firebase (carrega dinamicamente só se configurado) ─────────────────
+  // ── Firebase: watch em tempo real de tudo ──────────────────────────────
   useEffect(() => {
     if (!FIREBASE_ENABLED) return
-    let unsub1: any, unsub2: any
+    let unsub1: any, unsub2: any, unsub3: any, unsub4: any
 
     import('@/services/firestore').then(fb => {
       // Watch produtos em tempo real
-      unsub1 = fb.fbWatchProducts(p => { setProducts(p); save('ek_products', p) })
+      unsub1 = fb.fbWatchProducts(p => {
+        setProducts(p)
+        save('ek_products', p)
+      })
+
       // Watch pedidos em tempo real
-      unsub2 = fb.fbWatchOrders(o => { setOrders(o); save('ek_orders', o) })
-      // Carregar settings
-      fb.fbGetSettings().then(s => setSettings(prev => ({ ...prev, ...s })))
-      // Carregar cupons
-      fb.fbGetCoupons().then(c => { if (c.length) setCoupons(c) })
+      unsub2 = fb.fbWatchOrders(o => {
+        setOrders(o)
+        save('ek_orders', o)
+      })
+
+      // ✅ Watch settings em tempo real — mudança no admin aparece em todos os dispositivos
+      unsub3 = fb.fbWatchSettings(s => {
+        setSettings(prev => {
+          const merged = { ...prev, ...s }
+          save('ek_settings', merged)
+          return merged
+        })
+      })
+
+      // ✅ Watch cupons em tempo real
+      unsub4 = fb.fbWatchCoupons(c => {
+        setCoupons(c)
+        save('ek_coupons', c)
+      })
+
       setFbLoaded(true)
     }).catch(() => setFbLoaded(true))
 
-    return () => { unsub1?.(); unsub2?.() }
+    return () => {
+      unsub1?.()
+      unsub2?.()
+      unsub3?.()
+      unsub4?.()
+    }
   }, [])
 
-  // ── Persistência localStorage (fallback) ───────────────────────────────
+  // ── Persistência localStorage (fallback quando Firebase desligado) ──────
   useEffect(() => { if (!FIREBASE_ENABLED) save('ek_products', products) }, [products])
   useEffect(() => { if (!FIREBASE_ENABLED) save('ek_orders', orders) }, [orders])
-  useEffect(() => { save('ek_settings', settings) }, [settings])
+  useEffect(() => { if (!FIREBASE_ENABLED) save('ek_settings', settings) }, [settings])
   useEffect(() => { save('ek_permissions', ownerPermissions) }, [ownerPermissions])
   useEffect(() => { if (!FIREBASE_ENABLED) save('ek_coupons', coupons) }, [coupons])
 
@@ -88,6 +117,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbAddProduct({ ...p, createdAt: now, updatedAt: now })
+      // O watch acima (unsub1) já vai atualizar o estado automaticamente
     } else {
       setProducts(prev => [{ ...p, id: genId(), createdAt: now, updatedAt: now }, ...prev])
     }
@@ -97,6 +127,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbUpdateProduct(p.id, p)
+      // O watch acima já vai atualizar o estado automaticamente
     } else {
       setProducts(prev => prev.map(x => x.id === p.id ? { ...p, updatedAt: new Date().toISOString() } : x))
     }
@@ -106,6 +137,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbDeleteProduct(id)
+      // O watch acima já vai atualizar o estado automaticamente
     } else {
       setProducts(prev => prev.filter(p => p.id !== id))
     }
@@ -117,6 +149,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const now = new Date().toISOString()
     if (FIREBASE_ENABLED) {
       import('@/services/firestore').then(fb => fb.fbAddOrder({ ...o, id, createdAt: now, updatedAt: now }))
+      // O watch acima já vai atualizar o estado automaticamente
     } else {
       setOrders(prev => [{ ...o, id, createdAt: now, updatedAt: now }, ...prev])
     }
@@ -127,6 +160,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbUpdateOrder(id, patch)
+      // O watch acima já vai atualizar o estado automaticamente
     } else {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o))
     }
@@ -134,9 +168,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ── Settings ───────────────────────────────────────────────────────────
   const updateSettings = useCallback(async (patch: Partial<SiteSettings>) => {
+    // Atualiza local imediatamente para UI não travar
     setSettings(prev => ({ ...prev, ...patch }))
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
+      // Salva no Firebase — o watch (unsub3) vai propagar para todos os dispositivos
       await fb.fbUpdateSettings(patch)
     }
   }, [])
@@ -145,36 +181,47 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   // ── Cupons ─────────────────────────────────────────────────────────────
   const addCoupon = useCallback(async (c: Coupon) => {
-    setCoupons(prev => [...prev, c])
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbAddCoupon(c)
+      // O watch (unsub4) já vai atualizar o estado automaticamente
+    } else {
+      setCoupons(prev => [...prev, c])
     }
   }, [])
 
   const updateCoupon = useCallback(async (code: string, patch: Partial<Coupon>) => {
-    setCoupons(prev => prev.map(c => c.code === code ? { ...c, ...patch } : c))
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbUpdateCoupon(code, patch)
+      // O watch (unsub4) já vai atualizar o estado automaticamente
+    } else {
+      setCoupons(prev => prev.map(c => c.code === code ? { ...c, ...patch } : c))
     }
   }, [])
 
   const deleteCoupon = useCallback(async (code: string) => {
-    setCoupons(prev => prev.filter(c => c.code !== code))
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbDeleteCoupon(code)
+      // O watch (unsub4) já vai atualizar o estado automaticamente
+    } else {
+      setCoupons(prev => prev.filter(c => c.code !== code))
     }
   }, [])
 
-  // ── Entrega (só localStorage) ──────────────────────────────────────────
-  const addShippingOption    = useCallback((opt: Omit<ShippingOption,'id'>) =>
-    updateSettings({ shippingOptions: [...(settings.shippingOptions || []), { ...opt, id: genId() }] }), [settings, updateSettings])
+  // ── Entrega (via updateSettings → Firebase) ────────────────────────────
+  const addShippingOption = useCallback((opt: Omit<ShippingOption,'id'>) =>
+    updateSettings({ shippingOptions: [...(settings.shippingOptions || []), { ...opt, id: genId() }] }),
+  [settings, updateSettings])
+
   const updateShippingOption = useCallback((id: string, patch: Partial<ShippingOption>) =>
-    updateSettings({ shippingOptions: (settings.shippingOptions || []).map(s => s.id === id ? { ...s, ...patch } : s) }), [settings, updateSettings])
+    updateSettings({ shippingOptions: (settings.shippingOptions || []).map(s => s.id === id ? { ...s, ...patch } : s) }),
+  [settings, updateSettings])
+
   const deleteShippingOption = useCallback((id: string) =>
-    updateSettings({ shippingOptions: (settings.shippingOptions || []).filter(s => s.id !== id) }), [settings, updateSettings])
+    updateSettings({ shippingOptions: (settings.shippingOptions || []).filter(s => s.id !== id) }),
+  [settings, updateSettings])
 
   return (
     <StoreContext.Provider value={{

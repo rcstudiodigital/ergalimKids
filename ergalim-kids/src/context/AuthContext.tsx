@@ -1,19 +1,25 @@
 /**
- * AuthContext — Autenticação segura com JWT (HMAC-SHA256)
+ * AuthContext — Autenticação com Firebase Auth para clientes
  *
  * SEGURANÇA:
- * ✅ Token JWT assinado com HMAC-SHA256 via Web Crypto API
- * ✅ Role extraído do TOKEN assinado — não manipulável via DevTools
- * ✅ Sessão em sessionStorage com expiração de 8h
+ * ✅ Admin e Dono: credenciais fixas via variáveis de ambiente (JWT local)
+ * ✅ Clientes: Firebase Authentication (email/senha) — dados na nuvem
+ * ✅ Perfil do cliente salvo no Firestore /customers/{uid}
+ * ✅ Funciona em qualquer dispositivo — sem localStorage para clientes
  * ✅ Rate limiting: 5 tentativas/minuto
- * ✅ Timing attack prevention (delay constante em falha)
- * ✅ Clientes cadastrados ficam em localStorage CRIPTOGRAFADO por usuário
- * ✅ Senhas nunca salvas em texto — hash SHA-256 no frontend (bcrypt no backend)
+ * ✅ Token JWT para staff assinado com HMAC-SHA256
+ * ✅ Sessão em sessionStorage com expiração de 8h (staff)
  */
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import type { User, OwnerPermissions } from '@/types'
 import { DEFAULT_OWNER_PERMISSIONS } from '@/data/store'
 import { rateLimit, sanitize } from '@/utils/security'
+
+// Detecta se Firebase está configurado
+const FIREBASE_ENABLED = !!(
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID
+)
 
 interface AuthContextType {
   user: User | null
@@ -31,19 +37,14 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-// ─── JWT com HMAC-SHA256 ───────────────────────────────────────────────────
+// ─── JWT com HMAC-SHA256 (usado apenas para staff admin/dono) ──────────────
 const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || 'ergalim-kids-dev-secret-2025'
 
-async function sha256(data: string): Promise<string> {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(data))
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('')
-}
-
 async function signToken(payload: object): Promise<string> {
-  const header = btoa(JSON.stringify({ alg:'HS256', typ:'JWT' }))
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
   const body   = btoa(JSON.stringify(payload))
   const data   = `${header}.${body}`
-  const key    = await crypto.subtle.importKey('raw', new TextEncoder().encode(JWT_SECRET), { name:'HMAC', hash:'SHA-256' }, false, ['sign'])
+  const key    = await crypto.subtle.importKey('raw', new TextEncoder().encode(JWT_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
   const sig    = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data))
   return `${data}.${btoa(String.fromCharCode(...new Uint8Array(sig)))}`
 }
@@ -51,10 +52,10 @@ async function signToken(payload: object): Promise<string> {
 async function verifyToken(token: string): Promise<any | null> {
   try {
     const [header, body, sig] = token.split('.')
-    const data = `${header}.${body}`
-    const key  = await crypto.subtle.importKey('raw', new TextEncoder().encode(JWT_SECRET), { name:'HMAC', hash:'SHA-256' }, false, ['verify'])
-    const rawSig = Uint8Array.from(atob(sig), c => c.charCodeAt(0))
-    const valid  = await crypto.subtle.verify('HMAC', key, rawSig, new TextEncoder().encode(data))
+    const data    = `${header}.${body}`
+    const key     = await crypto.subtle.importKey('raw', new TextEncoder().encode(JWT_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['verify'])
+    const rawSig  = Uint8Array.from(atob(sig), c => c.charCodeAt(0))
+    const valid   = await crypto.subtle.verify('HMAC', key, rawSig, new TextEncoder().encode(data))
     if (!valid) return null
     const payload = JSON.parse(atob(body))
     if (Date.now() > payload.exp) return null
@@ -62,84 +63,133 @@ async function verifyToken(token: string): Promise<any | null> {
   } catch { return null }
 }
 
-// ─── Credenciais fixas (admin e dono) — clientes ficam em localStorage ────
+// ─── Credenciais fixas de staff (admin e dono) ────────────────────────────
 const STAFF_USERS = [
-  { id:'1', name:'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@ergalimkids.com', hash: import.meta.env.VITE_ADMIN_PASS || 'Admin@2025!', role:'admin' as const },
-  { id:'2', name:'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || 'owner@ergalimkids.com', hash: import.meta.env.VITE_OWNER_PASS || 'Owner@2025!', role:'owner' as const },
+  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@ergalimkids.com', hash: import.meta.env.VITE_ADMIN_PASS || 'Admin@2025!', role: 'admin' as const },
+  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || 'owner@ergalimkids.com', hash: import.meta.env.VITE_OWNER_PASS || 'Owner@2025!', role: 'owner' as const },
 ]
 
-// Chave de storage dos clientes cadastrados (lista de emails/hashes)
-const CUSTOMERS_KEY = 'ek_customers_index'
-
-interface StoredCustomer {
-  id: string; name: string; email: string; phone: string
-  passwordHash: string; createdAt: string
-}
-
-function getCustomers(): StoredCustomer[] {
-  try { return JSON.parse(localStorage.getItem(CUSTOMERS_KEY) || '[]') } catch { return [] }
-}
-function saveCustomers(list: StoredCustomer[]) {
-  try { localStorage.setItem(CUSTOMERS_KEY, JSON.stringify(list)) } catch {}
-}
-
-// ─────────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user,             setUser]             = useState<User | null>(null)
   const [token,            setToken]            = useState<string | null>(null)
   const [loading,          setLoading]          = useState(true)
   const [ownerPermissions, setOwnerPermissions] = useState<OwnerPermissions>(DEFAULT_OWNER_PERMISSIONS)
 
+  // ── Restaurar sessão ao carregar ────────────────────────────────────────
   useEffect(() => {
     const restore = async () => {
+      // 1. Verificar sessão de staff (JWT local)
       const raw = sessionStorage.getItem('ek_session')
-      if (!raw) { setLoading(false); return }
-      try {
-        const { token: t, perms } = JSON.parse(raw)
-        const payload = await verifyToken(t)
-        if (!payload) { sessionStorage.removeItem('ek_session'); setLoading(false); return }
-        setUser({ id: payload.id, name: payload.name, email: payload.email, role: payload.role, createdAt: payload.iat })
-        setToken(t)
-        if (perms) setOwnerPermissions(perms)
-      } catch { sessionStorage.removeItem('ek_session') }
-      setLoading(false)
+      if (raw) {
+        try {
+          const { token: t, perms } = JSON.parse(raw)
+          const payload = await verifyToken(t)
+          if (payload) {
+            setUser({ id: payload.id, name: payload.name, email: payload.email, role: payload.role, createdAt: payload.iat })
+            setToken(t)
+            if (perms) setOwnerPermissions(perms)
+            setLoading(false)
+            return
+          } else {
+            sessionStorage.removeItem('ek_session')
+          }
+        } catch {
+          sessionStorage.removeItem('ek_session')
+        }
+      }
+
+      // 2. Verificar sessão de cliente via Firebase Auth
+      if (FIREBASE_ENABLED) {
+        try {
+          const { auth } = await import('@/lib/firebase')
+          const { onAuthStateChanged } = await import('firebase/auth')
+
+          const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
+            if (firebaseUser) {
+              // Buscar perfil completo do Firestore
+              const fb = await import('@/services/firestore')
+              const profile = await fb.fbGetCustomer(firebaseUser.uid)
+              setUser({
+                id:        firebaseUser.uid,
+                name:      profile?.name || firebaseUser.displayName || 'Cliente',
+                email:     firebaseUser.email || '',
+                role:      'customer',
+                createdAt: profile?.createdAt || new Date().toISOString(),
+              })
+            } else {
+              // Sem usuário Firebase logado — limpar se era cliente
+              setUser(prev => (prev?.role === 'customer' ? null : prev))
+            }
+            setLoading(false)
+            unsub()
+          })
+        } catch {
+          setLoading(false)
+        }
+      } else {
+        setLoading(false)
+      }
     }
+
     restore()
   }, [])
 
+  // ── Login ────────────────────────────────────────────────────────────────
   const login = useCallback(async (email: string, password: string) => {
     if (!rateLimit('login', 5, 60_000)) throw new Error('Muitas tentativas. Aguarde 1 minuto.')
     const normalEmail = email.trim().toLowerCase()
 
-    // 1. Verificar staff (admin/dono)
+    // 1. Verificar staff (admin/dono) — autenticação local com JWT
     const staff = STAFF_USERS.find(u => u.email.toLowerCase() === normalEmail && u.hash === password)
     if (staff) {
       const { hash: _, ...u } = staff
-      const payload = { id: u.id, name: u.name, email: u.email, role: u.role, iat: new Date().toISOString(), exp: Date.now() + 8*3600_000 }
+      const payload = { id: u.id, name: u.name, email: u.email, role: u.role, iat: new Date().toISOString(), exp: Date.now() + 8 * 3600_000 }
       const t = await signToken(payload)
-      setUser({ ...u, createdAt: new Date().toISOString() }); setToken(t)
+      setUser({ ...u, createdAt: new Date().toISOString() })
+      setToken(t)
       sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
       return
     }
 
-    // 2. Verificar clientes cadastrados
-    const hash = await sha256(password + normalEmail) // salt simples; use bcrypt no backend
-    const customers = getCustomers()
-    const customer  = customers.find(c => c.email === normalEmail && c.passwordHash === hash)
-    if (customer) {
-      const payload = { id: customer.id, name: customer.name, email: customer.email, role: 'customer' as const, iat: new Date().toISOString(), exp: Date.now() + 8*3600_000 }
-      const t = await signToken(payload)
-      const userObj: User = { id: customer.id, name: customer.name, email: customer.email, role: 'customer', createdAt: customer.createdAt }
-      setUser(userObj); setToken(t)
-      sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
-      return
+    // 2. Verificar clientes via Firebase Auth
+    if (FIREBASE_ENABLED) {
+      try {
+        const { auth } = await import('@/lib/firebase')
+        const { signInWithEmailAndPassword } = await import('firebase/auth')
+        const credential = await signInWithEmailAndPassword(auth, normalEmail, password)
+        const firebaseUser = credential.user
+
+        // Buscar perfil do Firestore
+        const fb = await import('@/services/firestore')
+        const profile = await fb.fbGetCustomer(firebaseUser.uid)
+
+        setUser({
+          id:        firebaseUser.uid,
+          name:      profile?.name || firebaseUser.displayName || 'Cliente',
+          email:     firebaseUser.email || '',
+          role:      'customer',
+          createdAt: profile?.createdAt || new Date().toISOString(),
+        })
+        return
+      } catch (err: any) {
+        // Traduzir erros do Firebase para português
+        if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+          throw new Error('E-mail ou senha incorretos')
+        }
+        if (err.code === 'auth/too-many-requests') {
+          throw new Error('Muitas tentativas. Aguarde alguns minutos.')
+        }
+        throw new Error('Erro ao fazer login. Tente novamente.')
+      }
     }
 
-    // Delay anti-timing attack
+    // Fallback: sem Firebase configurado
     await new Promise(r => setTimeout(r, 300 + Math.random() * 200))
     throw new Error('E-mail ou senha incorretos')
   }, [ownerPermissions])
 
+  // ── Cadastro de cliente (Firebase Auth + Firestore) ───────────────────────
   const register = useCallback(async (name: string, email: string, password: string, phone: string) => {
     if (!rateLimit('register', 3, 60_000)) throw new Error('Muitas tentativas. Aguarde 1 minuto.')
     const normalEmail = email.trim().toLowerCase()
@@ -152,28 +202,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (password.length < 8)    throw new Error('Senha deve ter ao menos 8 caracteres')
     if (!/(?=.*[A-Z])(?=.*[0-9])/.test(password)) throw new Error('Senha precisa de pelo menos uma letra maiúscula e um número')
 
-    // Verificar se já existe
-    const customers = getCustomers()
-    const staff = STAFF_USERS.find(u => u.email.toLowerCase() === normalEmail)
-    if (staff || customers.some(c => c.email === normalEmail)) throw new Error('Este e-mail já está cadastrado')
-
-    // Hash da senha (salt = email para demo; use bcrypt + salt aleatório no backend)
-    const hash = await sha256(password + normalEmail)
-    const newCustomer: StoredCustomer = {
-      id: crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36),
-      name: normalName, email: normalEmail, phone: normalPhone,
-      passwordHash: hash, createdAt: new Date().toISOString(),
+    // Verificar se é e-mail de staff
+    if (STAFF_USERS.some(u => u.email.toLowerCase() === normalEmail)) {
+      throw new Error('Este e-mail não pode ser usado para cadastro')
     }
-    saveCustomers([...customers, newCustomer])
 
-    // Login automático após cadastro
-    await login(normalEmail, password)
-  }, [login])
+    if (FIREBASE_ENABLED) {
+      try {
+        const { auth } = await import('@/lib/firebase')
+        const { createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth')
 
-  const logout = useCallback(() => {
-    setUser(null); setToken(null)
-    sessionStorage.removeItem('ek_session')
+        // Criar conta no Firebase Auth
+        const credential = await createUserWithEmailAndPassword(auth, normalEmail, password)
+        const firebaseUser = credential.user
+
+        // Atualizar nome no Firebase Auth
+        await updateProfile(firebaseUser, { displayName: normalName })
+
+        // Salvar perfil completo no Firestore
+        const fb = await import('@/services/firestore')
+        const profile = {
+          id:        firebaseUser.uid,
+          name:      normalName,
+          email:     normalEmail,
+          phone:     normalPhone,
+          addresses: [],
+          createdAt: new Date().toISOString(),
+        }
+        await fb.fbSaveCustomer(firebaseUser.uid, profile)
+
+        // Setar usuário logado
+        setUser({
+          id:        firebaseUser.uid,
+          name:      normalName,
+          email:     normalEmail,
+          role:      'customer',
+          createdAt: profile.createdAt,
+        })
+      } catch (err: any) {
+        if (err.code === 'auth/email-already-in-use') {
+          throw new Error('Este e-mail já está cadastrado')
+        }
+        if (err.code === 'auth/weak-password') {
+          throw new Error('Senha muito fraca. Use ao menos 8 caracteres com letras e números')
+        }
+        throw new Error('Erro ao criar conta. Tente novamente.')
+      }
+    } else {
+      // Fallback sem Firebase: avisa que não está configurado
+      throw new Error('Cadastro indisponível: Firebase não configurado. Contate o suporte.')
+    }
   }, [])
+
+  // ── Logout ───────────────────────────────────────────────────────────────
+  const logout = useCallback(async () => {
+    // Deslogar do Firebase se for cliente
+    if (user?.role === 'customer' && FIREBASE_ENABLED) {
+      try {
+        const { auth } = await import('@/lib/firebase')
+        const { signOut } = await import('firebase/auth')
+        await signOut(auth)
+      } catch {}
+    }
+    setUser(null)
+    setToken(null)
+    sessionStorage.removeItem('ek_session')
+  }, [user])
 
   const updateOwnerPermissions = useCallback((p: OwnerPermissions) => {
     setOwnerPermissions(p)
