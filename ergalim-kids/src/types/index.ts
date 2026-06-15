@@ -81,8 +81,16 @@ export interface SiteSettings {
   // ── Logística ──────────────────────────────────────────────────────────
   freeShippingAbove: number; shippingOptions: ShippingOption[]
   // ── Pagamento ──────────────────────────────────────────────────────────
-  paymentGateway: 'stripe' | 'mercadopago' | 'pagarme'
-  stripePublicKey: string; mercadopagoPublicKey: string
+  paymentGateway: 'stripe' | 'mercadopago' | 'pagarme' | 'pix' | 'whatsapp'
+  stripePublicKey: string; mercadopagoPublicKey: string; pagarmePublicKey?: string
+  // Métodos de pagamento ativos (admin escolhe quais aceitar)
+  paymentMethods?: {
+    mercadopago?: { enabled: boolean; publicKey: string }
+    stripe?:      { enabled: boolean; publicKey: string }
+    pagarme?:     { enabled: boolean; publicKey: string }
+    pix?:         { enabled: boolean; key: string; keyType: string; holderName: string }
+    whatsapp?:    { enabled: boolean }  // finalizar pedido via WhatsApp
+  }
   // ── E-mails ────────────────────────────────────────────────────────────
   emailNotifyOwner: boolean; emailNotifyCustomer: boolean
   // ── Manutenção ─────────────────────────────────────────────────────────
