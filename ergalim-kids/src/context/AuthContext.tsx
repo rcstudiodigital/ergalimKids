@@ -191,13 +191,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (authRes.status === 401) {
-        // Credenciais inválidas na API — pode ser admin/dono com senha errada
-        // OU pode ser um cliente — deixa continuar para o Firebase Auth
+        // API respondeu: credenciais inválidas
+        // Verifica se o email é de staff (admin/dono) para dar erro correto
         const isStaffEmail = STAFF_USERS.some(u => u.email.toLowerCase() === normalEmail)
         if (isStaffEmail) {
           throw new Error('E-mail ou senha incorretos')
         }
-        // Não é staff — continua para tentar Firebase (cliente)
+        // Não é staff conhecido — continua para tentar Firebase Auth (cliente)
+      } else if (!authRes.ok) {
+        // Outro erro da API (500, etc) — tenta Firebase Auth
+        console.warn('API auth retornou:', authRes.status)
       }
     } catch (e: any) {
       if (e.message === 'E-mail ou senha incorretos') throw e

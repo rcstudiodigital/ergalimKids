@@ -33,28 +33,20 @@ export const auth = getAuth(app)
  * evitando o erro "permission-denied" por race condition.
  */
 export async function ensureAuth(): Promise<void> {
-  if (auth.currentUser) return  // já autenticado
+  // Já autenticado — OK
+  if (auth.currentUser) return
 
-  const { signInAnonymously, onAuthStateChanged } = await import('firebase/auth')
+  const { signInAnonymously } = await import('firebase/auth')
 
-  // Tenta login anônimo e aguarda completar
-  return new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error('Timeout na autenticação')), 10000)
-
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        clearTimeout(timeout)
-        unsub()
-        resolve()
-      }
-    })
-
-    signInAnonymously(auth).catch((err) => {
-      clearTimeout(timeout)
-      unsub()
-      reject(err)
-    })
-  })
+  // Faz login anônimo e aguarda a Promise do próprio Firebase resolver
+  // (sem depender de onAuthStateChanged, que pode ter race condition)
+  try {
+    await signInAnonymously(auth)
+  } catch (err: any) {
+    // Se já tem usuário autenticado de outro tipo (race condition paralela), ignora
+    if (auth.currentUser) return
+    throw err
+  }
 }
 
 export default app
