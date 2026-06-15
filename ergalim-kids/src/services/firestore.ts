@@ -25,12 +25,12 @@ export async function fbGetProducts(): Promise<Product[]> {
 }
 
 export async function fbAddProduct(p: Omit<Product, 'id'>): Promise<string> {
-  const ref = await addDoc(productsRef(), { ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+  const ref = await addDoc(productsRef(), clean({ ...p, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }))
   return ref.id
 }
 
 export async function fbUpdateProduct(id: string, p: Partial<Product>) {
-  await updateDoc(doc(db, 'products', id), { ...p, updatedAt: serverTimestamp() })
+  await updateDoc(doc(db, 'products', id), clean({ ...p, updatedAt: serverTimestamp() }))
 }
 
 export async function fbDeleteProduct(id: string) {
@@ -55,12 +55,12 @@ export async function fbGetOrders(): Promise<Order[]> {
 
 export async function fbAddOrder(o: Omit<Order, 'id'>): Promise<string> {
   const id = `EK-${Date.now().toString().slice(-6)}`
-  await setDoc(doc(db, 'orders', id), { ...o, createdAt: serverTimestamp(), updatedAt: serverTimestamp() })
+  await setDoc(doc(db, 'orders', id), clean({ ...o, createdAt: serverTimestamp(), updatedAt: serverTimestamp() }))
   return id
 }
 
 export async function fbUpdateOrder(id: string, patch: Partial<Order>) {
-  await updateDoc(doc(db, 'orders', id), { ...patch, updatedAt: serverTimestamp() })
+  await updateDoc(doc(db, 'orders', id), clean({ ...patch, updatedAt: serverTimestamp() }))
 }
 
 export function fbWatchOrders(cb: (orders: Order[]) => void): Unsubscribe {
@@ -78,7 +78,7 @@ export async function fbGetSettings(): Promise<Partial<SiteSettings>> {
 }
 
 export async function fbUpdateSettings(patch: Partial<SiteSettings>) {
-  await setDoc(doc(db, 'settings', 'main'), patch, { merge: true })
+  await setDoc(doc(db, 'settings', 'main'), clean(patch), { merge: true })
 }
 
 // ✅ NOVO: Watch de settings em tempo real — qualquer mudança no admin
@@ -100,11 +100,11 @@ export async function fbGetCoupons(): Promise<Coupon[]> {
 }
 
 export async function fbAddCoupon(c: Coupon) {
-  await setDoc(doc(db, 'coupons', c.code), c)
+  await setDoc(doc(db, 'coupons', c.code), clean(c))
 }
 
 export async function fbUpdateCoupon(code: string, patch: Partial<Coupon>) {
-  await updateDoc(doc(db, 'coupons', code), patch)
+  await updateDoc(doc(db, 'coupons', code), clean(patch))
 }
 
 export async function fbDeleteCoupon(code: string) {
@@ -129,7 +129,7 @@ export async function fbGetCustomer(userId: string): Promise<CustomerProfile | n
 }
 
 export async function fbSaveCustomer(userId: string, data: Partial<CustomerProfile>) {
-  await setDoc(doc(db, 'customers', userId), { ...data, updatedAt: serverTimestamp() }, { merge: true })
+  await setDoc(doc(db, 'customers', userId), clean({ ...data, updatedAt: serverTimestamp() }), { merge: true })
 }
 
 // ✅ NOVO: Watch do perfil do cliente em tempo real
