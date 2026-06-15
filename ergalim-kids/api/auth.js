@@ -28,7 +28,7 @@ export default async function handler(req, res) {
   if (!email || !password) return res.status(400).json({ error: 'Email e senha obrigatórios' })
 
   const user = STAFF.find(
-    u => u.email && u.email.toLowerCase() === email.toLowerCase() && u.pass === password
+    u => u.email && u.email.trim().toLowerCase() === email.trim().toLowerCase() && u.pass === password
   )
 
   if (!user) {

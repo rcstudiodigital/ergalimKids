@@ -156,45 +156,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!rateLimit('login', 5, 60_000)) throw new Error('Muitas tentativas. Aguarde 1 minuto.')
     const normalEmail = email.trim().toLowerCase()
 
-    // 1. Verificar staff (admin/dono) via API serverless segura
-    //    As senhas NÃO estão no bundle do cliente — ficam apenas no servidor
-    try {
-      const authRes = await fetch('/api/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: normalEmail, password }),
-      })
-      if (authRes.ok) {
-        const u = await authRes.json()
-        const payload = { id: u.id, name: u.name, email: u.email, role: u.role, iat: new Date().toISOString(), exp: Date.now() + 8 * 3600_000 }
-        const t = await signToken(payload)
-        setUser({ ...u, createdAt: new Date().toISOString() })
-        setToken(t)
-        sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
-
-        // Autentica anonimamente no Firebase para escrever no Firestore
-        if (FIREBASE_ENABLED) {
-          try {
-            const { auth } = await import('@/lib/firebase')
-            const { signInAnonymously } = await import('firebase/auth')
-            if (!auth.currentUser) await signInAnonymously(auth)
-          } catch (e) {
-            console.warn('Firebase anon auth:', e)
-          }
-        }
-        return
-      }
-    } catch {
-      // API não disponível em dev local — usa fallback de desenvolvimento
-    }
-
-    // Fallback para desenvolvimento local (sem servidor Vercel)
-    const staff = STAFF_USERS.find(u => u.email.toLowerCase() === normalEmail && u.hash === password)
-    if (staff) {
-      const { hash: _, ...u } = staff
-      const payload = { id: u.id, name: u.name, email: u.email, role: u.role, iat: new Date().toISOString(), exp: Date.now() + 8 * 3600_000 }
+    // 1. Verificar staff (admin/dono)
+    //    Em produção: via API serverless segura (/api/auth)
+    //    Em dev local: via STAFF_USERS (sem senha real)
+    const loginAsStaff = async (userData: { id: string; name: string; email: string; role: string }) => {
+      const payload = { ...userData, iat: new Date().toISOString(), exp: Date.now() + 8 * 3600_000 }
       const t = await signToken(payload)
-      setUser({ ...u, createdAt: new Date().toISOString() })
+      setUser({ ...userData, createdAt: new Date().toISOString() })
       setToken(t)
       sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
       if (FIREBASE_ENABLED) {
@@ -202,9 +170,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const { auth } = await import('@/lib/firebase')
           const { signInAnonymously } = await import('firebase/auth')
           if (!auth.currentUser) await signInAnonymously(auth)
-        } catch {}
+        } catch (e) { console.warn('Firebase anon:', e) }
       }
-      return
+    }
+
+    // Tenta a API serverless primeiro
+    let apiAvailable = false
+    try {
+      const authRes = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalEmail, password }),
+      })
+      apiAvailable = true // API respondeu (mesmo que com erro)
+
+      if (authRes.ok) {
+        const u = await authRes.json()
+        await loginAsStaff(u)
+        return
+      }
+
+      if (authRes.status === 401) {
+        // Credenciais inválidas na API — pode ser admin/dono com senha errada
+        // OU pode ser um cliente — deixa continuar para o Firebase Auth
+        const isStaffEmail = STAFF_USERS.some(u => u.email.toLowerCase() === normalEmail)
+        if (isStaffEmail) {
+          throw new Error('E-mail ou senha incorretos')
+        }
+        // Não é staff — continua para tentar Firebase (cliente)
+      }
+    } catch (e: any) {
+      if (e.message === 'E-mail ou senha incorretos') throw e
+      // API não disponível (dev local ou erro de rede) — tenta fallback local
+      apiAvailable = false
+    }
+
+    // Fallback: dev local (STAFF_USERS com hash de dev)
+    if (!apiAvailable) {
+      const staff = STAFF_USERS.find(u => u.email.toLowerCase() === normalEmail && u.hash === password)
+      if (staff) {
+        const { hash: _, ...u } = staff
+        await loginAsStaff({ id: u.id, name: u.name, email: u.email, role: u.role })
+        return
+      }
     }
 
     // 2. Clientes via Firebase Auth
