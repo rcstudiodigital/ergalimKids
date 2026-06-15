@@ -136,3 +136,12 @@ export function fbWatchCustomer(userId: string, cb: (profile: CustomerProfile | 
     snap => cb(snap.exists() ? (snap.data() as CustomerProfile) : null)
   )
 }
+
+// ── LISTAR CLIENTES (para email marketing) ───────────────────────────────────
+export async function fbGetAllCustomers(): Promise<{ email: string; name: string }[]> {
+  const snap = await getDocs(collection(db, 'customers'))
+  return snap.docs
+    .map(d => d.data())
+    .filter(c => c.email)
+    .map(c => ({ email: c.email as string, name: (c.name as string) || 'Cliente' }))
+}

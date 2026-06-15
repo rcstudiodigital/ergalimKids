@@ -37,6 +37,7 @@ const AdminShipping    = lazy(() => import('@/pages/admin/AdminShipping'))
 const AdminSettings    = lazy(() => import('@/pages/admin/AdminSettings'))
 const AdminPermissions = lazy(() => import('@/pages/admin/AdminPermissions'))
 const AdminPayment     = lazy(() => import('@/pages/admin/AdminPayment'))
+const AdminMarketing   = lazy(() => import('@/pages/admin/AdminMarketing'))
 
 // ── Dono ──────────────────────────────────────────────────────────────────
 const OwnerDashboard   = lazy(() => import('@/pages/owner/OwnerDashboard'))
@@ -107,6 +108,7 @@ export default function App() {
                     <Route path="settings"     element={<AdminSettings/>}/>
                     <Route path="permissions"  element={<AdminPermissions/>}/>
                     <Route path="payment"      element={<AdminPayment/>}/>
+                    <Route path="marketing"    element={<AdminMarketing/>}/>
                   </Route>
 
                   {/* ── DONO ─────────────────────────────────────── */}

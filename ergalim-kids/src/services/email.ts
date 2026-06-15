@@ -219,3 +219,96 @@ export async function sendOrderDeliveredToCustomer(data: {
 
   return sendEmail({ to: data.customerEmail, subject: `Pedido ${data.orderId} entregue! ✅ Ergalim Kids`, html })
 }
+
+// ════════════════════════════════════════════════════════════════════════
+// E-MAIL MARKETING — Promoções, novidades e descontos para clientes
+// ════════════════════════════════════════════════════════════════════════
+
+/**
+ * Envia um e-mail de campanha para uma lista de clientes
+ * 
+ * @param recipients - lista de e-mails dos clientes
+ * @param campaign   - dados da campanha (título, mensagem, cupom opcional)
+ */
+export async function sendMarketingCampaign(
+  recipients: string[],
+  campaign: {
+    subject:     string
+    title:       string
+    message:     string
+    couponCode?: string
+    couponDiscount?: number
+    buttonText?: string
+    buttonUrl?:  string
+    imageUrl?:   string
+  }
+): Promise<{ sent: number; failed: number }> {
+  const html = buildMarketingHtml(campaign)
+  let sent = 0, failed = 0
+
+  // Envia em lotes para não sobrecarregar
+  for (const email of recipients) {
+    const ok = await sendEmail({ to: email, subject: campaign.subject, html })
+    if (ok) sent++; else failed++
+    // Pequeno delay entre envios (evita rate limit)
+    await new Promise(r => setTimeout(r, 100))
+  }
+
+  return { sent, failed }
+}
+
+function buildMarketingHtml(c: {
+  title: string; message: string; couponCode?: string; couponDiscount?: number
+  buttonText?: string; buttonUrl?: string; imageUrl?: string
+}): string {
+  return `
+  <!DOCTYPE html>
+  <html lang="pt-BR">
+  <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+  <body style="margin:0;padding:0;background:#FFF9F5;font-family:Arial,sans-serif">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#FFF9F5;padding:20px 0">
+      <tr><td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;background:#fff;border-radius:24px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.08)">
+
+          <!-- Header -->
+          <tr><td style="background:linear-gradient(135deg,#1A2B6B,#2A3F9E);padding:32px;text-align:center">
+            <div style="font-size:28px;font-weight:900;color:#fff">⭐ ergalim <span style="color:#FF3D9A">kids</span></div>
+            <div style="font-size:12px;color:rgba(255,255,255,.6);letter-spacing:2px;margin-top:4px">MODA INFANTIL</div>
+          </td></tr>
+
+          ${c.imageUrl ? `<tr><td><img src="${c.imageUrl}" width="600" style="width:100%;display:block"></td></tr>` : ''}
+
+          <!-- Conteúdo -->
+          <tr><td style="padding:32px">
+            <h1 style="font-size:26px;font-weight:900;color:#1A2B6B;margin:0 0 16px">${c.title}</h1>
+            <p style="font-size:15px;line-height:1.7;color:#555;margin:0 0 24px">${c.message}</p>
+
+            ${c.couponCode ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px">
+              <tr><td style="background:#FFF0F8;border:2px dashed #FF3D9A;border-radius:16px;padding:20px;text-align:center">
+                <div style="font-size:12px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px">Seu cupom de desconto</div>
+                <div style="font-size:32px;font-weight:900;color:#FF3D9A;margin:8px 0;letter-spacing:2px">${c.couponCode}</div>
+                ${c.couponDiscount ? `<div style="font-size:14px;font-weight:700;color:#1A2B6B">${c.couponDiscount}% OFF na sua compra! 🎉</div>` : ''}
+              </td></tr>
+            </table>` : ''}
+
+            ${c.buttonText ? `
+            <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+              <a href="${c.buttonUrl || 'https://ergalimkids.com'}" style="display:inline-block;background:#FF3D9A;color:#fff;font-size:16px;font-weight:900;text-decoration:none;padding:16px 40px;border-radius:16px">${c.buttonText} →</a>
+            </td></tr></table>` : ''}
+          </td></tr>
+
+          <!-- Footer -->
+          <tr><td style="background:#1A2B6B;padding:24px;text-align:center">
+            <p style="font-size:12px;color:rgba(255,255,255,.6);margin:0 0 8px">Ergalim Kids · Moda infantil com estilo 💖</p>
+            <p style="font-size:11px;color:rgba(255,255,255,.4);margin:0">
+              Você recebeu este e-mail porque é cliente da Ergalim Kids.
+            </p>
+          </td></tr>
+
+        </table>
+      </td></tr>
+    </table>
+  </body>
+  </html>`
+}

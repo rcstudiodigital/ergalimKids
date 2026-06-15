@@ -87,6 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUser({ id: payload.id, name: payload.name, email: payload.email, role: payload.role, createdAt: payload.iat })
             setToken(t)
             if (perms) setOwnerPermissions(perms)
+            // ✅ Reautentica anonimamente no Firebase ao recarregar a página
+            if (FIREBASE_ENABLED) {
+              try {
+                const { auth } = await import('@/lib/firebase')
+                const { signInAnonymously } = await import('firebase/auth')
+                if (!auth.currentUser) await signInAnonymously(auth)
+              } catch {}
+            }
             setLoading(false)
             return
           } else {
@@ -155,6 +163,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser({ ...u, createdAt: new Date().toISOString() })
       setToken(t)
       sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
+
+      // ✅ Autentica anonimamente no Firebase para que admin/dono
+      //    possam ESCREVER no Firestore (produtos, settings, pedidos).
+      //    Sem isso, request.auth == null e as regras bloqueiam a escrita.
+      if (FIREBASE_ENABLED) {
+        try {
+          const { auth } = await import('@/lib/firebase')
+          const { signInAnonymously } = await import('firebase/auth')
+          if (!auth.currentUser) await signInAnonymously(auth)
+        } catch (e) {
+          console.warn('Firebase anon auth falhou:', e)
+        }
+      }
       return
     }
 

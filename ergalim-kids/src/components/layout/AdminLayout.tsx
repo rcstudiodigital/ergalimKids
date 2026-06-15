@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, ShoppingBag, Users,
   BarChart2, Palette, Shield, CreditCard,
   Menu, X, LogOut, ChevronRight, Star, Settings, Truck
-} from 'lucide-react'
+, Megaphone } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
 const MENU = [
@@ -14,6 +14,7 @@ const MENU = [
   { label: 'Produtos',     href: '/admin/products',     icon: Package,         desc: 'Adicionar / editar / remover' },
   { label: 'Pedidos',      href: '/admin/orders',       icon: ShoppingBag,     desc: 'Todos os pedidos' },
   { label: 'Clientes',     href: '/admin/customers',    icon: Users,           desc: 'Cadastros e histórico' },
+  { label: 'E-mail Marketing', href: '/admin/marketing', icon: Megaphone,    desc: 'Promoções e novidades' },
   { label: 'Financeiro',   href: '/admin/financial',    icon: BarChart2,       desc: 'Receitas e relatórios' },
   // ── Site
   { label: 'Personalizar', href: '/admin/customize',    icon: Palette,         desc: 'Cores, textos, home' },
