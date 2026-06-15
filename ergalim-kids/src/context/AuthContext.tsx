@@ -63,9 +63,11 @@ async function verifyToken(token: string): Promise<any | null> {
 }
 
 // ─── Credenciais fixas de staff (admin e dono) ────────────────────────────
+// STAFF_USERS: usado apenas em dev local (sem senha real)
+// Em produção, a autenticação é feita via /api/auth (servidor seguro)
 const STAFF_USERS = [
-  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || '', hash: import.meta.env.VITE_ADMIN_PASS || '', role: 'admin' as const },
-  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || '', hash: import.meta.env.VITE_OWNER_PASS || '', role: 'owner' as const },
+  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@ergalimkids.com', hash: import.meta.env.DEV ? 'admin123' : '', role: 'admin' as const },
+  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || 'owner@ergalimkids.com', hash: import.meta.env.DEV ? 'owner123' : '', role: 'owner' as const },
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
