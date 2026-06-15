@@ -224,6 +224,7 @@ export async function sendOrderPaidToCustomer(data: {
   orderId: string
   total: number
   items: { productName: string; quantity: number; size: string }[]
+  customMessage?: string
 }): Promise<boolean> {
   const itemsList = data.items.map(i =>
     `<div style="padding:8px 0;border-bottom:1px solid #f0f0f0;">
@@ -248,13 +249,14 @@ export async function sendOrderProcessingToCustomer(data: {
   customerName: string
   customerEmail: string
   orderId: string
+  customMessage?: string
 }): Promise<boolean> {
   const html = baseTemplate(`
     <h1>Seu pedido está sendo separado! 📦</h1>
     <p>Olá, <strong>${data.customerName}</strong>! Ótima notícia: seu pedido <strong>${data.orderId}</strong> está sendo preparado com muito carinho pela nossa equipe.</p>
     <div class="box">
       <p style="margin:0;font-size:15px;">📦 Status atual: <strong>Em Separação</strong></p>
-      <p style="margin:8px 0 0;font-size:13px;color:#888;">Em breve seu pedido será enviado e você receberá o código de rastreio.</p>
+      <p style="margin:8px 0 0;font-size:13px;color:#888;">${data.customMessage || 'Em breve seu pedido será enviado e você receberá o código de rastreio.'}</p>
     </div>
     <p style="font-size:13px;color:#555;">Dúvidas sobre seu pedido? Fale com a gente:</p>
     <a href="https://wa.me/5521992110726" class="btn">WhatsApp (21) 99211-0726</a>`)

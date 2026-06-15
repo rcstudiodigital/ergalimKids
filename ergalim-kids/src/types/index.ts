@@ -81,6 +81,13 @@ export interface SiteSettings {
   // ── Logística ──────────────────────────────────────────────────────────
   freeShippingAbove: number; shippingOptions: ShippingOption[]
   // ── Pagamento ──────────────────────────────────────────────────────────
+  emailMessages?: {
+    orderConfirmation?: string  // mensagem ao criar pedido
+    orderPaid?: string          // mensagem ao confirmar pagamento
+    orderProcessing?: string    // mensagem ao entrar em separação
+    orderShipped?: string       // mensagem ao enviar
+    orderDelivered?: string     // mensagem ao entregar
+  }
   paymentGateway: 'stripe' | 'mercadopago' | 'pagarme' | 'pix' | 'whatsapp'
   stripePublicKey: string; mercadopagoPublicKey: string; pagarmePublicKey?: string
   // Métodos de pagamento ativos (admin escolhe quais aceitar)

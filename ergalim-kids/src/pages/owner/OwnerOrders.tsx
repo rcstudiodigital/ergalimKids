@@ -26,7 +26,7 @@ const FILTER_OPTS = [
 ]
 
 export default function OwnerOrders() {
-  const { orders, updateOrder } = useStore()
+  const { orders, updateOrder, settings } = useStore()
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
   const [trackingInputs, setTrackingInputs] = useState<Record<string, string>>({})
@@ -69,9 +69,10 @@ export default function OwnerOrders() {
           ...base,
           total: order.total,
           items: order.items?.map((i: any) => ({ productName: i.productName, quantity: i.quantity, size: i.size })) || [],
+          customMessage: settings.emailMessages?.orderPaid,
         })
       } else if (nextStatus === 'processing') {
-        await sendOrderProcessingToCustomer(base)
+        await sendOrderProcessingToCustomer({ ...base, customMessage: settings.emailMessages?.orderProcessing })
       } else if (nextStatus === 'shipped') {
         const code = trackingInputs[order.id]?.trim()
         await sendOrderShippedToCustomer({

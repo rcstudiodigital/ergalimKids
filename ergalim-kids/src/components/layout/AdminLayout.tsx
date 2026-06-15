@@ -15,6 +15,7 @@ const MENU = [
   { label: 'Pedidos',      href: '/admin/orders',       icon: ShoppingBag,     desc: 'Todos os pedidos' },
   { label: 'Clientes',     href: '/admin/customers',    icon: Users,           desc: 'Cadastros e histórico' },
   { label: 'E-mail Marketing', href: '/admin/marketing', icon: Megaphone,    desc: 'Promoções e novidades' },
+  { label: 'Mensagens E-mail',  href: '/admin/email-messages', icon: Mail,     desc: 'Textos dos e-mails automáticos' },
   { label: 'Financeiro',   href: '/admin/financial',    icon: BarChart2,       desc: 'Receitas e relatórios' },
   // ── Site
   { label: 'Personalizar', href: '/admin/customize',    icon: Palette,         desc: 'Cores, textos, home' },

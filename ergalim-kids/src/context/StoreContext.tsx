@@ -143,22 +143,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateProduct = useCallback(async (p: Product) => {
+    // Atualiza local IMEDIATAMENTE
+    setProducts(prev => prev.map(x => x.id === p.id ? { ...p, updatedAt: new Date().toISOString() } : x))
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbUpdateProduct(p.id, p)
-      // O watch acima já vai atualizar o estado automaticamente
-    } else {
-      setProducts(prev => prev.map(x => x.id === p.id ? { ...p, updatedAt: new Date().toISOString() } : x))
     }
   }, [])
 
   const deleteProduct = useCallback(async (id: string) => {
+    // Atualiza local IMEDIATAMENTE
+    setProducts(prev => prev.filter(p => p.id !== id))
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbDeleteProduct(id)
-      // O watch acima já vai atualizar o estado automaticamente
-    } else {
-      setProducts(prev => prev.filter(p => p.id !== id))
     }
   }, [])
 
@@ -176,12 +174,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateOrder = useCallback(async (id: string, patch: Partial<Order>) => {
+    // Atualiza local IMEDIATAMENTE para a UI responder na hora
+    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o))
     if (FIREBASE_ENABLED) {
       const fb = await import('@/services/firestore')
       await fb.fbUpdateOrder(id, patch)
-      // O watch acima já vai atualizar o estado automaticamente
-    } else {
-      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o))
+      // O watch (unsub2) vai confirmar a atualização para todos os dispositivos
     }
   }, [])
 
