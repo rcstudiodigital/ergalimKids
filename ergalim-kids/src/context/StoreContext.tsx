@@ -1,32 +1,37 @@
 /**
- * StoreContext — Gerencia produtos, pedidos, configurações e cupons
- *
- * PERSISTÊNCIA LOCAL:
- * - Produtos, pedidos, configurações e cupons são salvos no localStorage
- * - Ao recarregar a página, os dados são restaurados
- * - Para banco de dados real, substituir as chamadas de localStorage por API calls
+ * StoreContext — com Firebase Firestore
+ * 
+ * Se Firebase configurado: dados na nuvem em tempo real
+ * Se não configurado: dados no localStorage (modo local)
  */
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react'
 import type { Product, Order, SiteSettings, OwnerPermissions, Coupon, ShippingOption } from '@/types'
 import { INITIAL_PRODUCTS, INITIAL_ORDERS, DEFAULT_SETTINGS, DEFAULT_OWNER_PERMISSIONS, INITIAL_COUPONS } from '@/data/store'
 import { genId } from '@/utils/security'
 
+// Detecta se Firebase está configurado
+const FIREBASE_ENABLED = !!(
+  import.meta.env.VITE_FIREBASE_API_KEY &&
+  import.meta.env.VITE_FIREBASE_PROJECT_ID
+)
+
 interface StoreContextType {
-  products:         Product[]
-  orders:           Order[]
-  settings:         SiteSettings
-  ownerPermissions: OwnerPermissions
-  coupons:          Coupon[]
-  addProduct:       (p: Omit<Product,'id'|'createdAt'|'updatedAt'>) => void
-  updateProduct:    (p: Product) => void
-  deleteProduct:    (id: string) => void
-  addOrder:         (o: Omit<Order,'id'|'createdAt'|'updatedAt'>) => string
-  updateOrder:      (id: string, patch: Partial<Order>) => void
-  updateSettings:   (patch: Partial<SiteSettings>) => void
+  products:           Product[]
+  orders:             Order[]
+  settings:           SiteSettings
+  ownerPermissions:   OwnerPermissions
+  coupons:            Coupon[]
+  firebaseEnabled:    boolean
+  addProduct:         (p: Omit<Product,'id'|'createdAt'|'updatedAt'>) => Promise<void>
+  updateProduct:      (p: Product) => Promise<void>
+  deleteProduct:      (id: string) => Promise<void>
+  addOrder:           (o: Omit<Order,'id'|'createdAt'|'updatedAt'>) => string
+  updateOrder:        (id: string, patch: Partial<Order>) => Promise<void>
+  updateSettings:     (patch: Partial<SiteSettings>) => Promise<void>
   updateOwnerPermissions: (p: OwnerPermissions) => void
-  addCoupon:        (c: Coupon) => void
-  updateCoupon:     (code: string, patch: Partial<Coupon>) => void
-  deleteCoupon:     (code: string) => void
+  addCoupon:          (c: Coupon) => Promise<void>
+  updateCoupon:       (code: string, patch: Partial<Coupon>) => Promise<void>
+  deleteCoupon:       (code: string) => Promise<void>
   addShippingOption:    (opt: Omit<ShippingOption,'id'>) => void
   updateShippingOption: (id: string, patch: Partial<ShippingOption>) => void
   deleteShippingOption: (id: string) => void
@@ -34,85 +39,147 @@ interface StoreContextType {
 
 const StoreContext = createContext<StoreContextType | null>(null)
 
-// ── Helpers de localStorage ──────────────────────────────────────────────
 function load<T>(key: string, fallback: T): T {
-  try {
-    const raw = localStorage.getItem(key)
-    return raw ? JSON.parse(raw) : fallback
-  } catch { return fallback }
+  try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : fallback }
+  catch { return fallback }
 }
-function save(key: string, value: unknown) {
-  try { localStorage.setItem(key, JSON.stringify(value)) } catch {}
+function save(key: string, v: unknown) {
+  try { localStorage.setItem(key, JSON.stringify(v)) } catch {}
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [products,         setProducts]         = useState<Product[]>(() => load('ek_products', INITIAL_PRODUCTS))
   const [orders,           setOrders]           = useState<Order[]>(() => load('ek_orders', INITIAL_ORDERS))
-  const [settings,         setSettings]         = useState<SiteSettings>(() => {
-    const saved = load<Partial<SiteSettings>>('ek_settings', {})
-    return { ...DEFAULT_SETTINGS, ...saved }
-  })
+  const [settings,         setSettings]         = useState<SiteSettings>(() => ({ ...DEFAULT_SETTINGS, ...load('ek_settings', {}) }))
   const [ownerPermissions, setOwnerPermissions] = useState<OwnerPermissions>(() => load('ek_permissions', DEFAULT_OWNER_PERMISSIONS))
   const [coupons,          setCoupons]          = useState<Coupon[]>(() => load('ek_coupons', INITIAL_COUPONS))
+  const [fbLoaded,         setFbLoaded]         = useState(!FIREBASE_ENABLED)
 
-  // Persistir sempre que mudar
-  useEffect(() => save('ek_products',    products),         [products])
-  useEffect(() => save('ek_orders',      orders),           [orders])
-  useEffect(() => save('ek_settings',    settings),         [settings])
-  useEffect(() => save('ek_permissions', ownerPermissions), [ownerPermissions])
-  useEffect(() => save('ek_coupons',     coupons),          [coupons])
+  // ── Firebase (carrega dinamicamente só se configurado) ─────────────────
+  useEffect(() => {
+    if (!FIREBASE_ENABLED) return
+    let unsub1: any, unsub2: any
 
-  // ── Produtos ─────────────────────────────────────────────────────────
-  const addProduct = useCallback((p: Omit<Product,'id'|'createdAt'|'updatedAt'>) => {
+    import('@/services/firestore').then(fb => {
+      // Watch produtos em tempo real
+      unsub1 = fb.fbWatchProducts(p => { setProducts(p); save('ek_products', p) })
+      // Watch pedidos em tempo real
+      unsub2 = fb.fbWatchOrders(o => { setOrders(o); save('ek_orders', o) })
+      // Carregar settings
+      fb.fbGetSettings().then(s => setSettings(prev => ({ ...prev, ...s })))
+      // Carregar cupons
+      fb.fbGetCoupons().then(c => { if (c.length) setCoupons(c) })
+      setFbLoaded(true)
+    }).catch(() => setFbLoaded(true))
+
+    return () => { unsub1?.(); unsub2?.() }
+  }, [])
+
+  // ── Persistência localStorage (fallback) ───────────────────────────────
+  useEffect(() => { if (!FIREBASE_ENABLED) save('ek_products', products) }, [products])
+  useEffect(() => { if (!FIREBASE_ENABLED) save('ek_orders', orders) }, [orders])
+  useEffect(() => { save('ek_settings', settings) }, [settings])
+  useEffect(() => { save('ek_permissions', ownerPermissions) }, [ownerPermissions])
+  useEffect(() => { if (!FIREBASE_ENABLED) save('ek_coupons', coupons) }, [coupons])
+
+  // ── Produtos ───────────────────────────────────────────────────────────
+  const addProduct = useCallback(async (p: Omit<Product,'id'|'createdAt'|'updatedAt'>) => {
     const now = new Date().toISOString()
-    setProducts(prev => [{ ...p, id: genId(), createdAt: now, updatedAt: now }, ...prev])
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbAddProduct({ ...p, createdAt: now, updatedAt: now })
+    } else {
+      setProducts(prev => [{ ...p, id: genId(), createdAt: now, updatedAt: now }, ...prev])
+    }
   }, [])
 
-  const updateProduct = useCallback((p: Product) => {
-    setProducts(prev => prev.map(x => x.id === p.id ? { ...p, updatedAt: new Date().toISOString() } : x))
+  const updateProduct = useCallback(async (p: Product) => {
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbUpdateProduct(p.id, p)
+    } else {
+      setProducts(prev => prev.map(x => x.id === p.id ? { ...p, updatedAt: new Date().toISOString() } : x))
+    }
   }, [])
 
-  const deleteProduct = useCallback((id: string) =>
-    setProducts(prev => prev.filter(p => p.id !== id)), [])
+  const deleteProduct = useCallback(async (id: string) => {
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbDeleteProduct(id)
+    } else {
+      setProducts(prev => prev.filter(p => p.id !== id))
+    }
+  }, [])
 
-  // ── Pedidos ───────────────────────────────────────────────────────────
+  // ── Pedidos ────────────────────────────────────────────────────────────
   const addOrder = useCallback((o: Omit<Order,'id'|'createdAt'|'updatedAt'>): string => {
+    const id  = `EK-${Date.now().toString().slice(-6)}`
     const now = new Date().toISOString()
-    const id = `EK-${Date.now().toString().slice(-6)}`
-    setOrders(prev => [{ ...o, id, createdAt: now, updatedAt: now }, ...prev])
+    if (FIREBASE_ENABLED) {
+      import('@/services/firestore').then(fb => fb.fbAddOrder({ ...o, id, createdAt: now, updatedAt: now }))
+    } else {
+      setOrders(prev => [{ ...o, id, createdAt: now, updatedAt: now }, ...prev])
+    }
     return id
   }, [])
 
-  const updateOrder = useCallback((id: string, patch: Partial<Order>) =>
-    setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o)), [])
+  const updateOrder = useCallback(async (id: string, patch: Partial<Order>) => {
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbUpdateOrder(id, patch)
+    } else {
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o))
+    }
+  }, [])
 
-  // ── Configurações ─────────────────────────────────────────────────────
-  const updateSettings = useCallback((patch: Partial<SiteSettings>) =>
-    setSettings(prev => ({ ...prev, ...patch })), [])
+  // ── Settings ───────────────────────────────────────────────────────────
+  const updateSettings = useCallback(async (patch: Partial<SiteSettings>) => {
+    setSettings(prev => ({ ...prev, ...patch }))
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbUpdateSettings(patch)
+    }
+  }, [])
 
-  const updateOwnerPermissions = useCallback((p: OwnerPermissions) =>
-    setOwnerPermissions(p), [])
+  const updateOwnerPermissions = useCallback((p: OwnerPermissions) => setOwnerPermissions(p), [])
 
-  // ── Cupons ────────────────────────────────────────────────────────────
-  const addCoupon    = useCallback((c: Coupon) => setCoupons(prev => [...prev, c]), [])
-  const updateCoupon = useCallback((code: string, patch: Partial<Coupon>) =>
-    setCoupons(prev => prev.map(c => c.code === code ? { ...c, ...patch } : c)), [])
-  const deleteCoupon = useCallback((code: string) =>
-    setCoupons(prev => prev.filter(c => c.code !== code)), [])
+  // ── Cupons ─────────────────────────────────────────────────────────────
+  const addCoupon = useCallback(async (c: Coupon) => {
+    setCoupons(prev => [...prev, c])
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbAddCoupon(c)
+    }
+  }, [])
 
-  // ── Entrega ───────────────────────────────────────────────────────────
-  const addShippingOption = useCallback((opt: Omit<ShippingOption,'id'>) =>
+  const updateCoupon = useCallback(async (code: string, patch: Partial<Coupon>) => {
+    setCoupons(prev => prev.map(c => c.code === code ? { ...c, ...patch } : c))
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbUpdateCoupon(code, patch)
+    }
+  }, [])
+
+  const deleteCoupon = useCallback(async (code: string) => {
+    setCoupons(prev => prev.filter(c => c.code !== code))
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbDeleteCoupon(code)
+    }
+  }, [])
+
+  // ── Entrega (só localStorage) ──────────────────────────────────────────
+  const addShippingOption    = useCallback((opt: Omit<ShippingOption,'id'>) =>
     updateSettings({ shippingOptions: [...(settings.shippingOptions || []), { ...opt, id: genId() }] }), [settings, updateSettings])
-
   const updateShippingOption = useCallback((id: string, patch: Partial<ShippingOption>) =>
     updateSettings({ shippingOptions: (settings.shippingOptions || []).map(s => s.id === id ? { ...s, ...patch } : s) }), [settings, updateSettings])
-
   const deleteShippingOption = useCallback((id: string) =>
     updateSettings({ shippingOptions: (settings.shippingOptions || []).filter(s => s.id !== id) }), [settings, updateSettings])
 
   return (
     <StoreContext.Provider value={{
       products, orders, settings, ownerPermissions, coupons,
+      firebaseEnabled: FIREBASE_ENABLED,
       addProduct, updateProduct, deleteProduct,
       addOrder, updateOrder,
       updateSettings, updateOwnerPermissions,
