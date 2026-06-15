@@ -50,15 +50,29 @@ export default function OwnerProducts() {
   }
 
   const handleSave = () => {
-    if (!form.name.trim())  { toast.error('Nome é obrigatório'); return }
-    if (form.price <= 0)    { toast.error('Preço deve ser maior que zero'); return }
-    if (!form.images[0]?.trim()) { toast.error('Adicione pelo menos uma imagem'); return }
-    if (form.variants.length === 0) { toast.error('Adicione pelo menos uma variante'); return }
+    if (!form.name.trim())       { toast.error('Nome é obrigatório'); setActiveTab('info'); return }
+    if (form.price <= 0)         { toast.error('Preço deve ser maior que zero'); setActiveTab('info'); return }
+    if (!form.images[0]?.trim()) { toast.error('Adicione pelo menos uma imagem'); setActiveTab('images'); return }
+
+    // Validar variantes: pelo menos uma com tamanho E cor preenchidos
+    const validVariants = form.variants.filter(v => v.size.trim() && v.color.trim())
+    if (validVariants.length === 0) {
+      toast.error('Adicione pelo menos um tamanho e cor na aba "Tamanhos & Estoque"')
+      setActiveTab('variants'); return
+    }
+
+    // Limpar imagens e variantes vazias
+    const cleanForm = {
+      ...form,
+      images: form.images.filter(im => im.trim()),
+      variants: validVariants,
+    }
+
     if (editProduct) {
-      updateProduct({ ...editProduct, ...form, updatedAt: new Date().toISOString() })
+      updateProduct({ ...editProduct, ...cleanForm, updatedAt: new Date().toISOString() })
       toast.success('Produto atualizado! ✅')
     } else {
-      addProduct(form)
+      addProduct(cleanForm)
       toast.success('Produto adicionado! ✅')
     }
     setShowForm(false)

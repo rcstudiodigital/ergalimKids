@@ -85,13 +85,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         save('ek_coupons', c)
       })
 
-      // PRIVADO (só logado): pedidos. Observa apenas quando há sessão Firebase,
-      // evitando o erro "permission-denied" para visitantes da loja.
+      // PRIVADO (só logado): pedidos. Observa apenas quando há sessão Firebase
+      // autenticada, evitando "permission-denied" para visitantes da loja.
       const { auth } = await import('@/lib/firebase')
       const { onAuthStateChanged } = await import('firebase/auth')
       unsubAuth = onAuthStateChanged(auth, (fbUser) => {
         if (fbUser) {
-          // Usuário autenticado → pode observar pedidos
+          // Há usuário Firebase autenticado (anônimo=staff ou real=cliente)
           if (!unsub2) {
             unsub2 = fb.fbWatchOrders(o => {
               setOrders(o)
@@ -99,7 +99,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             })
           }
         } else {
-          // Sem login → para de observar pedidos
           unsub2?.()
           unsub2 = null
         }
