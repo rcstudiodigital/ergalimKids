@@ -44,7 +44,7 @@ async function sendEmail({ to, subject, html }: SendEmailParams): Promise<boolea
         to,
         subject,
         html,
-        from: `${STORE_NAME} <noreply@ergalimkids.com>`,
+        // remetente decidido pela função serverless (EMAIL_FROM ou padrão de teste)
       }),
     })
     return res.ok
