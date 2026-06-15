@@ -29,12 +29,12 @@ export default function OwnerFinancial() {
     const m = o.createdAt.slice(0, 7)
     byMonth[m] = (byMonth[m] || 0) + o.total
   })
-  // Adicionar meses simulados para demo
+  // Preencher os últimos 6 meses (zero se não houve venda)
   const now = new Date()
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
     const key = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`
-    if (!byMonth[key]) byMonth[key] = Math.floor(Math.random() * 8000 + 5000)
+    if (!byMonth[key]) byMonth[key] = 0
   }
   const months = Object.entries(byMonth).sort().slice(-6)
   const maxRev = Math.max(...months.map(([, v]) => v), 1)
@@ -69,26 +69,26 @@ export default function OwnerFinancial() {
           {
             label: 'Receita Total',
             value: formatCurrency(revenue),
-            sub: `${paid.length + 139} pedidos pagos`,
+            sub: `${paid.length} pedidos pagos`,
             icon: '💰',
             bg: 'bg-bg-soft border-brand-pink/20',
-            change: '+12.4%'
+            change: null
           },
           {
             label: 'Mês Atual',
             value: formatCurrency(months[months.length-1]?.[1] || 0),
-            sub: 'Janeiro 2025',
+            sub: new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
             icon: '📈',
             bg: 'bg-bg-blue border-brand-sky/20',
-            change: '+8.1%'
+            change: null
           },
           {
             label: 'Ticket Médio',
-            value: formatCurrency(avgTicket || 189.90),
+            value: formatCurrency(avgTicket),
             sub: 'Por pedido',
             icon: '🛍️',
             bg: 'bg-bg-mint border-brand-mint/20',
-            change: '+5.2%'
+            change: null
           },
           {
             label: 'A Receber',
@@ -156,26 +156,11 @@ export default function OwnerFinancial() {
           </div>
           <div className="divide-y divide-gray-50">
             {topProducts.length === 0 ? (
-              // Dados de demo se não houver pedidos reais
-              [
-                { name: 'Conjunto Moletom "A" Rosa', qty: 34, revenue: 6456.60 },
-                { name: 'Conjunto STK Bege/Preto',   qty: 28, revenue: 5597.20 },
-                { name: 'Moletom "R" Pink Neon',     qty: 22, revenue: 3737.80 },
-                { name: 'Jaqueta Feminina Rosa',      qty: 19, revenue: 2278.10 },
-                { name: 'Calça Jogger STK Preta',    qty: 15, revenue: 1498.50 },
-              ].map((p, i) => (
-                <div key={p.name} className="flex items-center justify-between px-5 py-3.5">
-                  <div className="flex items-center gap-3">
-                    <span className={`w-7 h-7 rounded-xl flex items-center justify-center text-xs font-black
-                      ${i===0 ? 'bg-brand-yellow text-brand-navy' : 'bg-gray-100 text-gray-500'}`}>{i+1}</span>
-                    <div>
-                      <p className="text-sm font-black text-brand-navy line-clamp-1">{p.name}</p>
-                      <p className="text-xs text-gray-400 font-bold">{p.qty} vendas</p>
-                    </div>
-                  </div>
-                  <span className="font-black text-brand-pink text-sm">{formatCurrency(p.revenue)}</span>
-                </div>
-              ))
+              <div className="px-5 py-10 text-center">
+                <p className="text-3xl mb-2">📦</p>
+                <p className="text-sm font-bold text-gray-400">Nenhuma venda ainda</p>
+                <p className="text-xs text-gray-400 mt-1">Os produtos mais vendidos aparecem aqui</p>
+              </div>
             ) : topProducts.map((p, i) => (
               <div key={p.name} className="flex items-center justify-between px-5 py-3.5">
                 <div className="flex items-center gap-3">
@@ -226,9 +211,9 @@ export default function OwnerFinancial() {
         <h2 className="font-black text-brand-navy mb-4">📌 Resumo Geral</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total de pedidos',   value: String(orders.length + 139), icon: '🛍️' },
-            { label: 'Pedidos pagos',      value: String(paid.length + 131),    icon: '✅' },
-            { label: 'Em andamento',       value: String(orders.filter(o=>['paid','processing','shipped'].includes(o.status)).length + 3), icon: '🔄' },
+            { label: 'Total de pedidos',   value: String(orders.length), icon: '🛍️' },
+            { label: 'Pedidos pagos',      value: String(paid.length),    icon: '✅' },
+            { label: 'Em andamento',       value: String(orders.filter(o=>['paid','processing','shipped'].includes(o.status)).length), icon: '🔄' },
             { label: 'Cancelados',         value: String(cancelled),            icon: '❌' },
           ].map(item => (
             <div key={item.label} className="bg-bg-page rounded-2xl p-4 text-center border-2 border-gray-100">

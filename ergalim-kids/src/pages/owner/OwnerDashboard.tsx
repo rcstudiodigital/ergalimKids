@@ -64,7 +64,7 @@ export default function OwnerDashboard() {
               </span>
             )}
           </div>
-          <p className="text-2xl font-black text-brand-navy">{orders.length + 139}</p>
+          <p className="text-2xl font-black text-brand-navy">{orders.length}</p>
           <p className="text-xs text-gray-400 font-bold mt-1">Total de pedidos</p>
         </div>
         <div className="card-kid p-5 bg-bg-mint border-2 border-brand-mint/20 col-span-2 xl:col-span-1">
