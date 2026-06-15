@@ -21,7 +21,7 @@ export default function AccountOrders() {
   if (!user) return <Navigate to="/login?redirect=/account/orders" replace />
 
   // Filtra pedidos do cliente logado (mock: mostra todos para demo)
-  const myOrders = orders.filter(o => o.customerId === user.id || user.role !== 'customer')
+  const myOrders = orders.filter(o => o.customerId === user.id || o.customerEmail === user.email || user.role !== 'customer')
 
   return (
     <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10">

@@ -72,7 +72,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         save('ek_products', p)
       })
 
-      unsub3 = fb.fbWatchSettings(s => {
+      unsub3 = fb.fbWatchSettings((s: any) => {
+        // Restaurar permissões do dono se vierem do Firebase
+        if (s.ownerPermissions) {
+          setOwnerPermissions(s.ownerPermissions)
+          save('ek_permissions', s.ownerPermissions)
+          const { ownerPermissions: _, ...rest } = s
+          s = rest
+        }
         setSettings(prev => {
           const merged = { ...prev, ...s }
           save('ek_settings', merged)
@@ -189,7 +196,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const updateOwnerPermissions = useCallback((p: OwnerPermissions) => setOwnerPermissions(p), [])
+  const updateOwnerPermissions = useCallback(async (p: OwnerPermissions) => {
+    setOwnerPermissions(p)
+    save('ek_permissions', p)
+    if (FIREBASE_ENABLED) {
+      const fb = await import('@/services/firestore')
+      await fb.fbUpdateSettings({ ownerPermissions: p } as any)
+    }
+  }, [])
 
   // ── Cupons ─────────────────────────────────────────────────────────────
   const addCoupon = useCallback(async (c: Coupon) => {

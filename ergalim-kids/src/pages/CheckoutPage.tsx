@@ -64,6 +64,7 @@ export default function CheckoutPage() {
     try {
       // 1. SALVA O PEDIDO no banco (sempre, independente da forma de pagamento)
       addOrder({
+        customerId: user.id,
         customerName: address.name,
         customerEmail: user.email,
         items: items.map(i => ({

@@ -37,7 +37,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 // ─── JWT com HMAC-SHA256 (usado apenas para staff admin/dono) ──────────────
-const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || 'ergalim-kids-dev-secret-2025'
+const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || ''
 
 async function signToken(payload: object): Promise<string> {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
@@ -64,8 +64,8 @@ async function verifyToken(token: string): Promise<any | null> {
 
 // ─── Credenciais fixas de staff (admin e dono) ────────────────────────────
 const STAFF_USERS = [
-  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@ergalimkids.com', hash: import.meta.env.VITE_ADMIN_PASS || 'Admin@2025!', role: 'admin' as const },
-  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || 'owner@ergalimkids.com', hash: import.meta.env.VITE_OWNER_PASS || 'Owner@2025!', role: 'owner' as const },
+  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || '', hash: import.meta.env.VITE_ADMIN_PASS || '', role: 'admin' as const },
+  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || '', hash: import.meta.env.VITE_OWNER_PASS || '', role: 'owner' as const },
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -154,7 +154,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!rateLimit('login', 5, 60_000)) throw new Error('Muitas tentativas. Aguarde 1 minuto.')
     const normalEmail = email.trim().toLowerCase()
 
-    // 1. Verificar staff (admin/dono)
+    // 1. Verificar staff (admin/dono) via API serverless segura
+    //    As senhas NÃO estão no bundle do cliente — ficam apenas no servidor
+    try {
+      const authRes = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: normalEmail, password }),
+      })
+      if (authRes.ok) {
+        const u = await authRes.json()
+        const payload = { id: u.id, name: u.name, email: u.email, role: u.role, iat: new Date().toISOString(), exp: Date.now() + 8 * 3600_000 }
+        const t = await signToken(payload)
+        setUser({ ...u, createdAt: new Date().toISOString() })
+        setToken(t)
+        sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
+
+        // Autentica anonimamente no Firebase para escrever no Firestore
+        if (FIREBASE_ENABLED) {
+          try {
+            const { auth } = await import('@/lib/firebase')
+            const { signInAnonymously } = await import('firebase/auth')
+            if (!auth.currentUser) await signInAnonymously(auth)
+          } catch (e) {
+            console.warn('Firebase anon auth:', e)
+          }
+        }
+        return
+      }
+    } catch {
+      // API não disponível em dev local — usa fallback de desenvolvimento
+    }
+
+    // Fallback para desenvolvimento local (sem servidor Vercel)
     const staff = STAFF_USERS.find(u => u.email.toLowerCase() === normalEmail && u.hash === password)
     if (staff) {
       const { hash: _, ...u } = staff
@@ -163,18 +195,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser({ ...u, createdAt: new Date().toISOString() })
       setToken(t)
       sessionStorage.setItem('ek_session', JSON.stringify({ token: t, perms: ownerPermissions }))
-
-      // ✅ Autentica anonimamente no Firebase para que admin/dono
-      //    possam ESCREVER no Firestore (produtos, settings, pedidos).
-      //    Sem isso, request.auth == null e as regras bloqueiam a escrita.
       if (FIREBASE_ENABLED) {
         try {
           const { auth } = await import('@/lib/firebase')
           const { signInAnonymously } = await import('firebase/auth')
           if (!auth.currentUser) await signInAnonymously(auth)
-        } catch (e) {
-          console.warn('Firebase anon auth falhou:', e)
-        }
+        } catch {}
       }
       return
     }

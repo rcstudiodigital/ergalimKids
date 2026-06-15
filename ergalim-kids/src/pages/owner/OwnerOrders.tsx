@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Search, ChevronDown, Package } from 'lucide-react'
+import { Search, ChevronDown, Package, MessageCircle } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
 import type { OrderStatus } from '@/types'
 import { formatCurrency, formatDate } from '@/utils/security'
@@ -125,7 +125,7 @@ export default function OwnerOrders() {
                 <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
                   {order.items.map((item, i) => (
                     <div key={i} className="shrink-0 flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2">
-                      <img src={item.productImage} alt="" className="w-9 h-9 rounded-lg object-cover"/>
+                      <img src={item.image || item.productImage || ""} alt="" className="w-10 h-10 rounded-xl object-cover bg-gray-100 border border-gray-200"/>
                       <div className="text-xs">
                         <p className="font-bold text-brand-navy line-clamp-1 max-w-[120px]">{item.productName}</p>
                         <p className="text-gray-400">{item.size} · {item.color} · ×{item.quantity}</p>
@@ -142,9 +142,31 @@ export default function OwnerOrders() {
                 {/* Ações */}
                 <div className="flex flex-wrap gap-2 items-center">
 
-                  {/* Pago → marcar enviado */}
+                  {/* WhatsApp do cliente */}
+                  {order.customerPhone && (
+                    <a
+                      href={`https://wa.me/55${order.customerPhone.replace(/\D/g,'')}?text=${encodeURIComponent(`Olá ${order.customerName}! Sou o Gabriel da Ergalim Kids 👋\n\nSeu pedido *${order.id}* está sendo preparado com carinho!\n\nTotal: R$ ${order.total?.toFixed(2)?.replace('.',',')}\n\nQualquer dúvida estou aqui! 😊`)}`}
+                      target="_blank" rel="noreferrer"
+                      className="flex items-center gap-1.5 text-xs font-black text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-xl transition-colors">
+                      <MessageCircle size={13}/> WhatsApp cliente
+                    </a>
+                  )}
+
+                  {/* Pendente → confirmar pagamento */}
+                  {order.status === 'pending' && (
+                    <button onClick={() => { updateOrder(order.id, { status: 'paid' }); toast.success('Pagamento confirmado! ✅') }}
+                      className="text-xs font-black text-white bg-blue-500 hover:bg-blue-600 px-3 py-2 rounded-xl transition-colors">
+                      ✅ Confirmar Pagamento
+                    </button>
+                  )}
+
+                  {/* Pago/Processando → marcar em preparo + enviado */}
                   {(order.status === 'paid' || order.status === 'processing') && (
                     <div className="flex items-center gap-2 flex-wrap">
+                      <button onClick={() => { updateOrder(order.id, { status: 'processing' }); toast.success('Status: Em preparo 📦') }}
+                        className="text-xs font-black text-white bg-amber-500 hover:bg-amber-600 px-3 py-2 rounded-xl transition-colors">
+                        📦 Em Preparo
+                      </button>
                       <input
                         placeholder="Código de rastreio (ex: AA123456789BR)"
                         value={trackingInputs[order.id] || ''}
