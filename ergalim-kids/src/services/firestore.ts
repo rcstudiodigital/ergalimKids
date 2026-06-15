@@ -16,6 +16,26 @@ import {
 import { db, ensureAuth } from '@/lib/firebase'
 import type { Product, Order, SiteSettings, Coupon, CustomerProfile } from '@/types'
 
+/**
+ * Remove campos undefined de um objeto (o Firestore rejeita undefined).
+ * Percorre objetos e arrays recursivamente.
+ */
+function clean<T>(obj: T): T {
+  if (obj === null || obj === undefined) return obj
+  if (Array.isArray(obj)) {
+    return obj.map(v => clean(v)) as unknown as T
+  }
+  if (typeof obj === 'object') {
+    const result: any = {}
+    for (const [key, value] of Object.entries(obj as Record<string, any>)) {
+      if (value === undefined) continue
+      result[key] = clean(value)
+    }
+    return result
+  }
+  return obj
+}
+
 // ── PRODUTOS ────────────────────────────────────────────────────────────────
 export const productsRef = () => collection(db, 'products')
 
