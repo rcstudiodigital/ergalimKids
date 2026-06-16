@@ -174,8 +174,8 @@ export default function OwnerOrders() {
                     <p className="text-xs text-gray-400">{order.customerEmail} · {formatDate(order.createdAt)}</p>
                   </div>
                   {/* Botão WhatsApp — só aparece se o cliente tem telefone */}
-                  {order.customerPhone ? (
-                    <a href={`https://wa.me/55${order.customerPhone.replace(/\D/g,'')}?text=${encodeURIComponent(`Olá ${order.customerName}! 👋 Sou o Gabriel da Ergalim Kids.\n\nSeu pedido *${order.id}* está sendo tratado com carinho! 💕\n\nTotal: ${formatCurrency(order.total)}\n\nQualquer dúvida estou aqui! 😊`)}`}
+                  {(order.customerPhone || order.shippingAddress?.phone) ? (
+                    <a href={`https://wa.me/55${(order.customerPhone || order.shippingAddress?.phone || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Olá ${order.customerName}! 👋 Sou o Gabriel da Ergalim Kids.\n\nSeu pedido *${order.id}* está sendo tratado com carinho! 💕\n\nTotal: ${formatCurrency(order.total)}\n\nQualquer dúvida estou aqui! 😊`)}`}
                       target="_blank" rel="noreferrer"
                       className="flex items-center gap-1.5 text-xs font-black text-white bg-green-500 hover:bg-green-600 px-3 py-2 rounded-xl transition-colors shrink-0">
                       <MessageCircle size={13}/> WhatsApp

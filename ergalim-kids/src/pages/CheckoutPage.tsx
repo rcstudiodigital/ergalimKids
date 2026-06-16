@@ -90,6 +90,7 @@ export default function CheckoutPage() {
         customerId: user.id,
         customerName: address.name,
         customerEmail: user.email,
+        customerPhone: address.phone,
         items: items.map(i => ({
           productId: i.product.id,
           productName: i.product.name,
