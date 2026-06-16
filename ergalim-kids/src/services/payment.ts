@@ -91,7 +91,14 @@ export async function createMercadoPagoPreference(
     const res = await fetch('/api/payment/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...pref, method }),
+      body: JSON.stringify({
+        orderId: pref.orderId,
+        amount: pref.total,
+        items: pref.items,
+        method,
+        customerEmail: pref.customerEmail,
+        customerName: pref.customerName,
+      }),
     })
 
     if (!res.ok) throw new Error('Erro ao criar pagamento')
