@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { useNavigate, Navigate, Link } from 'react-router-dom'
 import { Shield, CreditCard, QrCode, ChevronRight, Truck, Lock, Copy, CheckCircle, ArrowRight, Loader2, MapPin } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
+import { useCustomer } from '@/context/CustomerContext'
 import { useAuth } from '@/context/AuthContext'
 import { useStore } from '@/context/StoreContext'
 import { formatCurrency } from '@/utils/security'
@@ -38,7 +39,11 @@ export default function CheckoutPage() {
   const [orderId, setOrderId]     = useState('')
 
   const [address, setAddress] = useState({
-    name: user?.name || '', phone: '', zipCode: '',
+    name: user?.name || profile?.name || '',
+    phone: profile?.phone || '',
+    // pré-preenche com o endereço padrão salvo (se existir)
+    ...(addresses?.find(a => a.isDefault) || {}),
+    zipCode: addresses?.find(a => a.isDefault)?.zipCode || '',
     street: '', number: '', complement: '',
     neighborhood: '', city: '', state: '',
   })

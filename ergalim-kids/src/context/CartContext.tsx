@@ -14,10 +14,18 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null)
 
-export function CartProvider({ children, coupons = [] }: { children: ReactNode; coupons?: Coupon[] }) {
+export function CartProvider({ children, coupons = [], userId }: { children: ReactNode; coupons?: Coupon[]; userId?: string }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [coupon, setCoupon] = useState<string | null>(null)
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null)
+
+  // Limpar carrinho quando o usuário muda (evita misturar carrinhos entre clientes)
+  useEffect(() => {
+    setItems([])
+    setCoupon(null)
+    localStorage.removeItem('ek_cart')
+    localStorage.removeItem('ek_coupon')
+  }, [userId])
 
   useEffect(() => {
     const s = localStorage.getItem('ek_cart')

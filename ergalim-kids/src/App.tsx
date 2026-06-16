@@ -64,10 +64,12 @@ function AppWithCustomer({ children }: { children: React.ReactNode }) {
   return <CustomerProvider userId={user?.id}>{children}</CustomerProvider>
 }
 
-// CartWithCoupons injeta os cupons do Firebase no CartProvider
+// CartWithCoupons injeta os cupons e userId no CartProvider
+// userId garante que o carrinho é limpo quando o usuário muda
 function CartWithCoupons({ children }: { children: React.ReactNode }) {
   const { coupons } = useStore()
-  return <CartProvider coupons={coupons}>{children}</CartProvider>
+  const { user } = useAuth()
+  return <CartProvider coupons={coupons} userId={user?.id}>{children}</CartProvider>
 }
 
 export default function App() {
