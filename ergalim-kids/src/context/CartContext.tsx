@@ -15,6 +15,7 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
+  const { coupons } = useStore()  // cupons reais do Firebase
   const [items, setItems] = useState<CartItem[]>([])
   const [coupon, setCoupon] = useState<string | null>(null)
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null)
@@ -47,14 +48,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const clearCart = useCallback(() => { setItems([]); localStorage.removeItem('ek_cart') }, [])
 
   const subtotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0)
-  const couponObj = coupon ? INITIAL_COUPONS.find(c => c.code === coupon) : null
+  const couponObj = coupon ? coupons.find(c => c.code === coupon) : null
   const discount = couponObj ? subtotal * couponObj.discount : 0
   const shipping = 0 // será calculado no checkout baseado na opção selecionada
   const total = subtotal - discount + shipping
   const itemCount = items.reduce((a, i) => a + i.quantity, 0)
 
   const applyCoupon = useCallback((code: string): boolean => {
-    const found = INITIAL_COUPONS.find(c => c.code === code.toUpperCase() && c.active)
+    const found = coupons.find(c => c.code === code.toUpperCase() && c.active)
     if (!found) return false
     if (found.minValue && subtotal < found.minValue) return false
     setCoupon(found.code); localStorage.setItem('ek_coupon', found.code); return true
