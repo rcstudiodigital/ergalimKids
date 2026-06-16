@@ -174,12 +174,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateOrder = useCallback(async (id: string, patch: Partial<Order>) => {
-    // Atualiza local IMEDIATAMENTE para a UI responder na hora
+    // 1. Atualiza local IMEDIATAMENTE — UI responde na hora independente do Firebase
     setOrders(prev => prev.map(o => o.id === id ? { ...o, ...patch, updatedAt: new Date().toISOString() } : o))
+    // 2. Persiste no Firebase em background — não bloqueia a UI
     if (FIREBASE_ENABLED) {
-      const fb = await import('@/services/firestore')
-      await fb.fbUpdateOrder(id, patch)
-      // O watch (unsub2) vai confirmar a atualização para todos os dispositivos
+      try {
+        const fb = await import('@/services/firestore')
+        await fb.fbUpdateOrder(id, patch)
+      } catch (err) {
+        console.warn('updateOrder Firebase falhou (atualização local OK):', err)
+        // Não relança o erro — a atualização local já aconteceu
+      }
     }
   }, [])
 

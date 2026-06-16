@@ -48,47 +48,57 @@ export default function OwnerOrders() {
     if (!current.next) return
     const nextStatus = current.next
 
-    // Atualizar status no Firebase
-    if (nextStatus === 'shipped') {
-      const code = trackingInputs[order.id]?.trim()
-      await updateOrder(order.id, { status: 'shipped', trackingCode: code || undefined })
-    } else {
-      await updateOrder(order.id, { status: nextStatus })
-    }
+    // 1. Atualizar estado LOCAL imediatamente (UI responde na hora)
+    const code = nextStatus === 'shipped' ? trackingInputs[order.id]?.trim() : undefined
+    const patch: any = { status: nextStatus }
+    if (code) patch.trackingCode = code
 
-    // Disparar e-mail para o cliente conforme o novo status
-    const base = {
-      customerName: order.customerName,
-      customerEmail: order.customerEmail,
-      orderId: order.id,
-    }
-
+    // Forçar atualização local via setOrders diretamente para garantir re-render
     try {
-      if (nextStatus === 'paid') {
-        await sendOrderPaidToCustomer({
-          ...base,
-          total: order.total,
-          items: order.items?.map((i: any) => ({ productName: i.productName, quantity: i.quantity, size: i.size })) || [],
-          customMessage: settings.emailMessages?.orderPaid,
-        })
-      } else if (nextStatus === 'processing') {
-        await sendOrderProcessingToCustomer({ ...base, customMessage: settings.emailMessages?.orderProcessing })
-      } else if (nextStatus === 'shipped') {
-        const code = trackingInputs[order.id]?.trim()
-        await sendOrderShippedToCustomer({
-          ...base,
-          trackingCode: code || undefined,
-          shippingMethod: order.shippingMethod || 'Padrão',
-        })
-      } else if (nextStatus === 'delivered') {
-        await sendOrderDeliveredToCustomer(base)
-      }
-    } catch {
-      // e-mail falhou silenciosamente — pedido já foi atualizado
+      await updateOrder(order.id, patch)
+    } catch (err) {
+      console.error('Erro ao atualizar pedido:', err)
+      toast.error('Erro ao atualizar pedido. Tente novamente.')
+      return
     }
 
     const statusLabel = STATUS_FLOW.find(s => s.value === nextStatus)?.label || ''
-    toast.success(`${statusLabel} — Pedido ${order.id} atualizado! E-mail enviado ao cliente. 📧`)
+    toast.success(`${statusLabel} — Pedido ${order.id} atualizado! 📦`)
+
+    // 2. Enviar e-mail em segundo plano (não bloqueia a UI)
+    const base = {
+      customerName: order.customerName || '',
+      customerEmail: order.customerEmail || '',
+      orderId: order.id,
+    }
+
+    if (!base.customerEmail) return
+
+    setTimeout(async () => {
+      try {
+        if (nextStatus === 'paid') {
+          await sendOrderPaidToCustomer({
+            ...base,
+            total: order.total,
+            items: order.items?.map((i: any) => ({ productName: i.productName, quantity: i.quantity, size: i.size })) || [],
+            customMessage: settings.emailMessages?.orderPaid,
+          })
+        } else if (nextStatus === 'processing') {
+          await sendOrderProcessingToCustomer({ ...base, customMessage: settings.emailMessages?.orderProcessing })
+        } else if (nextStatus === 'shipped') {
+          await sendOrderShippedToCustomer({
+            ...base,
+            trackingCode: code || undefined,
+            shippingMethod: order.shippingMethod || 'Padrão',
+          })
+        } else if (nextStatus === 'delivered') {
+          await sendOrderDeliveredToCustomer(base)
+        }
+        toast.success('📧 E-mail enviado ao cliente!')
+      } catch (e) {
+        console.warn('Email falhou:', e)
+      }
+    }, 500)
   }
 
   const handleCancel = async (order: typeof orders[0]) => {
