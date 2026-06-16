@@ -19,22 +19,20 @@ export function CartProvider({ children, coupons = [], userId }: { children: Rea
   const [coupon, setCoupon] = useState<string | null>(null)
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null)
 
-  // Limpar carrinho quando o usuário muda (evita misturar carrinhos entre clientes)
-  useEffect(() => {
-    setItems([])
-    setCoupon(null)
-    localStorage.removeItem('ek_cart')
-    localStorage.removeItem('ek_coupon')
-  }, [userId])
+  // Chave do localStorage baseada no userId — cada usuário tem seu próprio carrinho
+  const cartKey   = userId ? `ek_cart_${userId}`   : 'ek_cart_guest'
+  const couponKey = userId ? `ek_coupon_${userId}` : 'ek_coupon_guest'
 
+  // Carrega o carrinho correto quando o userId muda (login/logout/troca de conta)
   useEffect(() => {
-    const s = localStorage.getItem('ek_cart')
-    if (s) try { setItems(JSON.parse(s)) } catch {}
-    const c = localStorage.getItem('ek_coupon')
-    if (c) setCoupon(c)
-  }, [])
+    const s = localStorage.getItem(cartKey)
+    setItems(s ? (() => { try { return JSON.parse(s) } catch { return [] } })() : [])
+    const c = localStorage.getItem(couponKey)
+    setCoupon(c || null)
+  }, [cartKey])  // re-executa quando a chave muda (= quando usuário muda)
 
-  useEffect(() => { localStorage.setItem('ek_cart', JSON.stringify(items)) }, [items])
+  // Salva o carrinho sempre que muda
+  useEffect(() => { localStorage.setItem(cartKey, JSON.stringify(items)) }, [items, cartKey])
 
   const addItem = useCallback((product: Product, selectedSize: string, selectedColor: string, qty = 1) => {
     setItems(prev => {
@@ -52,7 +50,7 @@ export function CartProvider({ children, coupons = [], userId }: { children: Rea
     setItems(prev => prev.map(i => i.product.id === id && i.selectedSize === size && i.selectedColor === color ? { ...i, quantity: qty } : i))
   }, [removeItem])
 
-  const clearCart = useCallback(() => { setItems([]); localStorage.removeItem('ek_cart') }, [])
+  const clearCart = useCallback(() => { setItems([]); localStorage.removeItem(cartKey) }, [cartKey])
 
   const subtotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0)
   const couponObj = coupon ? coupons.find(c => c.code === coupon) : null
@@ -65,10 +63,10 @@ export function CartProvider({ children, coupons = [], userId }: { children: Rea
     const found = coupons.find(c => c.code === code.toUpperCase() && c.active)
     if (!found) return false
     if (found.minValue && subtotal < found.minValue) return false
-    setCoupon(found.code); localStorage.setItem('ek_coupon', found.code); return true
+    setCoupon(found.code); localStorage.setItem(couponKey, found.code); return true
   }, [subtotal])
 
-  const removeCoupon = useCallback(() => { setCoupon(null); localStorage.removeItem('ek_coupon') }, [])
+  const removeCoupon = useCallback(() => { setCoupon(null); localStorage.removeItem(couponKey) }, [couponKey])
 
   return (
     <CartContext.Provider value={{ items, addItem, removeItem, updateQty, clearCart, total, subtotal, itemCount, shipping, discount, coupon, selectedShippingId, setSelectedShippingId, applyCoupon, removeCoupon }}>

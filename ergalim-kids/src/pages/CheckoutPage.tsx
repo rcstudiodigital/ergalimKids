@@ -38,15 +38,33 @@ export default function CheckoutPage() {
   const [copied,  setCopied]      = useState(false)
   const [orderId, setOrderId]     = useState('')
 
+  const defaultAddress = addresses?.find(a => a.isDefault)
   const [address, setAddress] = useState({
-    name: user?.name || profile?.name || '',
-    phone: profile?.phone || '',
-    // pré-preenche com o endereço padrão salvo (se existir)
-    ...(addresses?.find(a => a.isDefault) || {}),
-    zipCode: addresses?.find(a => a.isDefault)?.zipCode || '',
+    name: user?.name || '', phone: '',
     street: '', number: '', complement: '',
-    neighborhood: '', city: '', state: '',
+    neighborhood: '', city: '', state: '', zipCode: '',
   })
+
+  // Pré-preencher quando o perfil e endereços carregarem do Firebase
+  const [addressPreFilled, setAddressPreFilled] = useState(false)
+  React.useEffect(() => {
+    if (addressPreFilled) return
+    if (!profile && !addresses?.length) return
+    setAddressPreFilled(true)
+    const def = addresses?.find(a => a.isDefault)
+    setAddress(prev => ({
+      ...prev,
+      name:         def?.name         || profile?.name  || prev.name,
+      phone:        def?.phone        || profile?.phone || prev.phone,
+      zipCode:      def?.zipCode      || prev.zipCode,
+      street:       def?.street       || prev.street,
+      number:       def?.number       || prev.number,
+      complement:   def?.complement   || prev.complement,
+      neighborhood: def?.neighborhood || prev.neighborhood,
+      city:         def?.city         || prev.city,
+      state:        def?.state        || prev.state,
+    }))
+  }, [profile, addresses, addressPreFilled])
 
   // Hook de CEP automático
   const { cepLoading, cepError, handleCepChange } = useCep(address, setAddress)
