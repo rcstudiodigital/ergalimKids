@@ -48,6 +48,8 @@ const OwnerOrders      = lazy(() => import('@/pages/owner/OwnerOrders'))
 const OwnerFinancial   = lazy(() => import('@/pages/owner/OwnerFinancial'))
 const OwnerPromotions  = lazy(() => import('@/pages/owner/OwnerPromotions'))
 const OwnerShipping    = lazy(() => import('@/pages/owner/OwnerShipping'))
+const OwnerPayment     = lazy(() => import('@/pages/owner/OwnerPayment'))
+const OwnerFreight     = lazy(() => import('@/pages/owner/OwnerFreight'))
 
 const Loading = () => (
   <div className="min-h-screen flex items-center justify-center bg-bg-page">
