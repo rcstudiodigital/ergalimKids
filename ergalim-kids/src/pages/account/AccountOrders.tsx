@@ -49,11 +49,24 @@ export default function AccountOrders() {
                 </div>
 
                 <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-                  {order.items.map((item, i) => (
-                    <div key={i} className="shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-100">
-                      <img src={item.image || item.productImage || ""} alt={item.productName} className="w-full h-full object-cover bg-gray-200" />
-                    </div>
-                  ))}
+                  {order.items.map((item, i) => {
+                    const imgSrc = item.image || item.productImage || ''
+                    return (
+                      <div key={i} className="shrink-0 flex items-center gap-2 bg-gray-50 rounded-xl px-2 py-1.5 border border-gray-100">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 shrink-0 flex items-center justify-center">
+                          {imgSrc ? (
+                            <img src={imgSrc} alt={item.productName} className="w-full h-full object-cover" />
+                          ) : (
+                            <span className="text-lg">👕</span>
+                          )}
+                        </div>
+                        <div className="text-xs pr-1">
+                          <p className="font-bold text-brand-navy line-clamp-1 max-w-[100px]">{item.productName}</p>
+                          <p className="text-gray-400">{item.size} · {item.color} · ×{item.quantity}</p>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="flex items-center justify-between">

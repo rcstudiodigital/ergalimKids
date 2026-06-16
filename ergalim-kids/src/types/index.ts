@@ -28,7 +28,7 @@ export interface ShippingAddress {
 
 export interface Order {
   id: string; customerId: string; customerName: string; customerEmail: string; customerPhone: string
-  items: { productId: string; productName: string; productImage: string; price: number; quantity: number; size: string; color: string }[]
+  items: { productId: string; productName: string; productImage?: string; image?: string; price: number; quantity: number; size: string; color: string }[]
   subtotal: number; shipping: number; discount: number; total: number; status: OrderStatus
   paymentMethod: 'stripe' | 'pix' | 'mercadopago'; paymentId?: string
   shippingAddress: ShippingAddress; trackingCode?: string; notes?: string
