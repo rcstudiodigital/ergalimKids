@@ -84,7 +84,8 @@ export default function CheckoutPage() {
   const { melhorEnvioOptions, calculating: calcShipping, calcularFrete } = useShippingCalc()
 
   if (!user)            return <Navigate to="/login?redirect=/checkout" replace/>
-  if (items.length===0) return <Navigate to="/cart" replace/>
+  // Só redireciona se carrinho vazio E não estamos numa tela de pagamento pós-pedido
+  if (items.length===0 && !showManualPix && !pixCode && !orderId) return <Navigate to="/cart" replace/>
 
   // Combina métodos manuais com opções do Melhor Envio (se disponíveis)
   const manualShipping = (settings.shippingOptions || []).filter(s => s.active)
