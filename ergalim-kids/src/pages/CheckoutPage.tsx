@@ -463,39 +463,69 @@ export default function CheckoutPage() {
           )}
 
           {/* ── PAGAMENTO ────────────────────────────────────────────── */}
-          {step === 'payment' && (
-            <div className="card-kid p-5 space-y-5">
-              <h2 className="font-black text-brand-navy text-lg flex items-center gap-2">
-                <CreditCard size={20} className="text-brand-pink"/> Forma de Pagamento
-              </h2>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { key:'pix' as PayMethod,  icon:'🔵', name:'Pix',    sub:'Aprovação imediata' },
-                  { key:'card' as PayMethod, icon:'💳', name:'Cartão', sub:'Crédito / Débito' },
-                ].map(opt => (
-                  <button key={opt.key} onClick={() => setPayMethod(opt.key)}
-                    className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-2 transition-all ${payMethod===opt.key ? 'border-brand-pink bg-bg-soft' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <span className="text-3xl">{opt.icon}</span>
-                    <p className="font-black text-brand-navy text-sm">{opt.name}</p>
-                    <p className="text-xs text-gray-400 font-bold">{opt.sub}</p>
-                    {payMethod===opt.key && <span className="text-[10px] bg-brand-pink text-white px-2 py-0.5 rounded-full font-black">✓ Selecionado</span>}
-                  </button>
-                ))}
+          {step === 'payment' && (() => {
+            // Monta as opções de pagamento disponíveis conforme a configuração do Gabriel
+            const mpOk = settings.paymentMethods?.mercadopago?.enabled && settings.paymentMethods?.mercadopago?.publicKey?.startsWith('APP_USR')
+            const pixManualOk = settings.paymentMethods?.pix?.enabled && settings.paymentMethods?.pix?.key
+            const payOptions: { key: PayMethod; icon: string; name: string; sub: string }[] = []
+
+            // PIX aparece se: Mercado Pago ativo (PIX automático) OU PIX manual configurado
+            if (mpOk || pixManualOk) {
+              payOptions.push({ key:'pix', icon:'🔵', name:'Pix', sub: mpOk ? 'Aprovação imediata' : 'Chave Pix' })
+            }
+            // Cartão aparece SOMENTE se o Mercado Pago estiver configurado
+            if (mpOk) {
+              payOptions.push({ key:'card', icon:'💳', name:'Cartão', sub:'Crédito / Débito' })
+            }
+
+            // Se nenhuma forma configurada → finaliza via WhatsApp
+            const noPaymentConfigured = payOptions.length === 0
+
+            // Garante que payMethod seja válido
+            if (payOptions.length > 0 && !payOptions.some(o => o.key === payMethod)) {
+              setPayMethod(payOptions[0].key)
+            }
+
+            return (
+              <div className="card-kid p-5 space-y-5">
+                <h2 className="font-black text-brand-navy text-lg flex items-center gap-2">
+                  <CreditCard size={20} className="text-brand-pink"/> Forma de Pagamento
+                </h2>
+
+                {noPaymentConfigured ? (
+                  <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 text-center">
+                    <div className="text-4xl mb-2">💬</div>
+                    <p className="font-black text-brand-navy mb-1">Pagamento via WhatsApp</p>
+                    <p className="text-xs text-gray-500">Após confirmar o pedido, combine o pagamento direto com a loja pelo WhatsApp.</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className={`grid ${payOptions.length === 1 ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                      {payOptions.map(opt => (
+                        <button key={opt.key} onClick={() => setPayMethod(opt.key)}
+                          className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-2 transition-all ${payMethod===opt.key ? 'border-brand-pink bg-bg-soft' : 'border-gray-200 hover:border-gray-300'}`}>
+                          <span className="text-3xl">{opt.icon}</span>
+                          <p className="font-black text-brand-navy text-sm">{opt.name}</p>
+                          <p className="text-xs text-gray-400 font-bold">{opt.sub}</p>
+                          {payMethod===opt.key && <span className="text-[10px] bg-brand-pink text-white px-2 py-0.5 rounded-full font-black">✓ Selecionado</span>}
+                        </button>
+                      ))}
+                    </div>
+                    <div className={`p-3 rounded-2xl text-xs font-bold ${payMethod==='pix' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+                      {payMethod === 'pix'
+                        ? (mpOk ? '🔵 Após confirmar, você recebe o QR Code e código Pix. Aprovação instantânea!' : '🔵 Após confirmar, você verá a chave Pix para pagar e enviar o comprovante.')
+                        : '💳 Você será redirecionado para o Mercado Pago para inserir os dados do cartão com segurança.'}
+                    </div>
+                  </>
+                )}
+
+                <div className="flex gap-3">
+                  <button onClick={() => goNext('shipping')} className="btn-outline flex-1">← Voltar</button>
+                  <button onClick={() => goNext('confirm')} className="btn-primary flex-1">Revisar <ChevronRight size={16}/></button>
+                </div>
               </div>
-              <div className={`p-3 rounded-2xl text-xs font-bold ${payMethod==='pix' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                {payMethod === 'pix'
-                  ? '🔵 Após confirmar, você recebe o QR Code e código Pix. Aprovação instantânea!'
-                  : '💳 Você será redirecionado para o Mercado Pago para inserir os dados do cartão com segurança.'}
-              </div>
-              <div className="flex items-center gap-2 text-xs text-gray-400 font-bold">
-                <Lock size={12}/> Pagamento processado com segurança pelo Mercado Pago
-              </div>
-              <div className="flex gap-3">
-                <button onClick={() => goNext('shipping')} className="btn-outline flex-1">← Voltar</button>
-                <button onClick={() => goNext('confirm')} className="btn-primary flex-1">Revisar <ChevronRight size={16}/></button>
-              </div>
-            </div>
-          )}
+            )
+          })()}
 
           {/* ── CONFIRMAR ────────────────────────────────────────────── */}
           {step === 'confirm' && (
