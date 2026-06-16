@@ -9,6 +9,7 @@ import { formatCurrency } from '@/utils/security'
 import { createMercadoPagoPreference } from '@/services/payment'
 import { sendOrderConfirmationToCustomer, sendNewOrderToOwner } from '@/services/email'
 import { useCep } from '@/hooks/useCep'
+import { useShippingCalc } from '@/hooks/useShippingCalc'
 import toast from 'react-hot-toast'
 
 type Step = 'address' | 'shipping' | 'payment' | 'confirm'
@@ -68,11 +69,16 @@ export default function CheckoutPage() {
 
   // Hook de CEP automático
   const { cepLoading, cepError, handleCepChange } = useCep(address, setAddress)
+  const { melhorEnvioOptions, calculating: calcShipping, calcularFrete } = useShippingCalc()
 
   if (!user)            return <Navigate to="/login?redirect=/checkout" replace/>
   if (items.length===0) return <Navigate to="/cart" replace/>
 
-  const activeShipping = (settings.shippingOptions || []).filter(s => s.active)
+  // Combina métodos manuais com opções do Melhor Envio (se disponíveis)
+  const manualShipping = (settings.shippingOptions || []).filter(s => s.active)
+  const activeShipping = melhorEnvioOptions.length > 0
+    ? [...melhorEnvioOptions, ...manualShipping.filter(s => s.price === 0)] // ME + opções grátis (retirada)
+    : manualShipping
   const chosenShipping = activeShipping.find(s => s.id === selectedShipping)
   const shippingCost   = chosenShipping ? chosenShipping.price : (subtotal >= settings.freeShippingAbove ? 0 : 19.90)
   const finalTotal     = subtotal - discount + shippingCost
@@ -235,6 +241,8 @@ export default function CheckoutPage() {
               e.preventDefault()
               if (!address.phone.trim()) { toast.error('Informe seu telefone'); return }
               if (!address.zipCode || address.zipCode.replace(/\D/g,'').length < 8) { toast.error('CEP inválido'); return }
+      // Calcular frete via Melhor Envio (silencioso — complementa as opções manuais)
+      calcularFrete(address.zipCode, subtotal)
               if (!address.street.trim()) { toast.error('Informe a rua'); return }
               if (!address.number.trim()) { toast.error('Informe o número'); return }
               if (!address.city.trim())   { toast.error('Informe a cidade'); return }
