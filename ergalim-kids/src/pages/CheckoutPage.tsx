@@ -41,6 +41,7 @@ export default function CheckoutPage() {
   const [showManualPix, setShowManualPix] = useState(false)
   const [copied,  setCopied]      = useState(false)
   const [orderId, setOrderId]     = useState('')
+  const [paidAmount, setPaidAmount] = useState(0)
 
   const defaultAddress = addresses?.find(a => a.isDefault)
   const [address, setAddress] = useState({
@@ -164,7 +165,7 @@ export default function CheckoutPage() {
           }, payMethod)
 
           if (payResult.success && payMethod === 'pix' && payResult.pixCode) {
-            setPixCode(payResult.pixCode); setPixQR(payResult.pixQR || ''); clearCart(); return
+            setPaidAmount(finalTotal); setPixCode(payResult.pixCode); setPixQR(payResult.pixQR || ''); clearCart(); return
           }
           if (payResult.success && payMethod === 'card' && payResult.initPoint) {
             clearCart(); window.location.href = payResult.initPoint; return
@@ -175,6 +176,7 @@ export default function CheckoutPage() {
       // 4. PIX manual configurado pelo Gabriel → mostra a chave PIX
       const pixManual = settings.paymentMethods?.pix
       if (payMethod === 'pix' && pixManual?.enabled && pixManual?.key) {
+        setPaidAmount(finalTotal)  // guarda o valor ANTES de limpar o carrinho
         setOrderId(oid)
         setShowManualPix(true)
         clearCart()
@@ -210,7 +212,7 @@ export default function CheckoutPage() {
           <div className="text-5xl mb-3">🔵</div>
           <h1 className="font-black text-2xl text-brand-navy mb-2">Pague com Pix</h1>
           <p className="text-sm font-bold text-gray-500 mb-6">
-            Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(finalTotal)}
+            Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(paidAmount)}
           </p>
 
           <div className="bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-left">
@@ -225,7 +227,7 @@ export default function CheckoutPage() {
             {pixData?.holderName && (
               <p className="text-xs text-gray-600"><strong>Titular:</strong> {pixData.holderName}</p>
             )}
-            <p className="text-lg font-black text-brand-navy mt-2">Valor: {formatCurrency(finalTotal)}</p>
+            <p className="text-lg font-black text-brand-navy mt-2">Valor: {formatCurrency(paidAmount)}</p>
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700 text-left mb-5">
@@ -260,7 +262,7 @@ export default function CheckoutPage() {
         <div className="text-5xl mb-3">🔵</div>
         <h1 className="font-black text-2xl text-brand-navy mb-2">Pague com Pix</h1>
         <p className="text-sm font-bold text-gray-500 mb-6">
-          Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(finalTotal)}
+          Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(paidAmount)}
         </p>
         {pixQR && (
           <div className="bg-gray-50 rounded-2xl p-4 mb-4 flex justify-center">
