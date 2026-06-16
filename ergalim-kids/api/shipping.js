@@ -38,7 +38,7 @@ export default async function handler(req, res) {
             quantity: 1,
           }
         ],
-        services: '1,2',  // 1=PAC, 2=SEDEX
+        // Sem filtro de services — retorna todas as transportadoras disponíveis na conta
         options: {
           receipt: false,
           own_hand: false,
@@ -53,10 +53,19 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json()
-    
-    // Formatar para o padrão da loja
-    const options = data
-      .filter((s) => !s.error && s.price)
+
+    // Log para debug (aparece nos logs da Vercel)
+    console.log('Melhor Envio retornou', data?.length, 'opções')
+    if (Array.isArray(data)) {
+      data.forEach((s) => {
+        if (s.error) console.log(`  ${s.name}: ERRO - ${s.error}`)
+        else console.log(`  ${s.name}: R$ ${s.price} (${s.delivery_time} dias)`)
+      })
+    }
+
+    // Formatar para o padrão da loja — aceita qualquer opção com preço válido
+    const options = (Array.isArray(data) ? data : [])
+      .filter((s) => !s.error && s.price && parseFloat(s.price) > 0)
       .map((s) => ({
         id: `me_${s.id}`,
         name: s.name,                                    // ex: "PAC", "SEDEX"

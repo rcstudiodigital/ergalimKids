@@ -374,7 +374,9 @@ export default function CheckoutPage() {
                         onChange={() => setSelectedShipping(opt.id)}
                         className="accent-pink w-4 h-4"/>
                       <div>
-                        <p className="font-black text-brand-navy text-sm">{opt.name}</p>
+                        <p className="font-black text-brand-navy text-sm">
+                          {opt.company && opt.company !== opt.name ? `${opt.company} · ` : ''}{opt.name}
+                        </p>
                         <p className="text-xs text-gray-500 font-bold">{opt.estimatedDays}</p>
                       </div>
                     </div>
