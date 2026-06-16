@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider, useAuth } from '@/context/AuthContext'
+import { useStore } from '@/context/StoreContext'
 import { CartProvider } from '@/context/CartContext'
 import { StoreProvider } from '@/context/StoreContext'
 import { CustomerProvider } from '@/context/CustomerContext'
@@ -69,7 +70,7 @@ export default function App() {
       <StoreProvider>
         <AuthProvider>
           <AppWithCustomer>
-            <CartProvider>
+            <CartWithCoupons>
               <Toaster
                 position="top-right"
                 toastOptions={{
@@ -124,7 +125,7 @@ export default function App() {
                   </Route>
                 </Routes>
               </Suspense>
-            </CartProvider>
+            </CartWithCoupons>
           </AppWithCustomer>
         </AuthProvider>
       </StoreProvider>

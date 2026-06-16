@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import type { CartItem, Product } from '@/types'
-import { INITIAL_COUPONS } from '@/data/store'
+import type { Coupon } from '@/types'
 
 interface CartContextType {
   items: CartItem[]; addItem: (p: Product, size: string, color: string, qty?: number) => void
@@ -14,8 +14,7 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | null>(null)
 
-export function CartProvider({ children }: { children: ReactNode }) {
-  const { coupons } = useStore()  // cupons reais do Firebase
+export function CartProvider({ children, coupons = [] }: { children: ReactNode; coupons?: Coupon[] }) {
   const [items, setItems] = useState<CartItem[]>([])
   const [coupon, setCoupon] = useState<string | null>(null)
   const [selectedShippingId, setSelectedShippingId] = useState<string | null>(null)
