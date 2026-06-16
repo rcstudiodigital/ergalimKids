@@ -70,6 +70,15 @@ export default function CheckoutPage() {
     }))
   }, [profile, addresses, addressPreFilled])
 
+  // Define a forma de pagamento padrão com base no que está configurado
+  React.useEffect(() => {
+    const mpOk = settings.paymentMethods?.mercadopago?.enabled && settings.paymentMethods?.mercadopago?.publicKey?.startsWith('APP_USR')
+    const pixOk = settings.paymentMethods?.pix?.enabled && settings.paymentMethods?.pix?.key
+    // Se PIX disponível, usa PIX. Senão, se só cartão, usa cartão.
+    if (mpOk || pixOk) setPayMethod('pix')
+    else if (mpOk) setPayMethod('card')
+  }, [settings.paymentMethods])
+
   // Hook de CEP automático
   const { cepLoading, cepError, handleCepChange } = useCep(address, setAddress)
   const { melhorEnvioOptions, calculating: calcShipping, calcularFrete } = useShippingCalc()
@@ -480,11 +489,6 @@ export default function CheckoutPage() {
 
             // Se nenhuma forma configurada → finaliza via WhatsApp
             const noPaymentConfigured = payOptions.length === 0
-
-            // Garante que payMethod seja válido
-            if (payOptions.length > 0 && !payOptions.some(o => o.key === payMethod)) {
-              setPayMethod(payOptions[0].key)
-            }
 
             return (
               <div className="card-kid p-5 space-y-5">
