@@ -37,7 +37,10 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null)
 
 // ─── JWT com HMAC-SHA256 (usado apenas para staff admin/dono) ──────────────
-const JWT_SECRET = import.meta.env.VITE_JWT_SECRET || ''
+// Secret de sessão local — usado APENAS para validar a sessão de 8h no navegador.
+// A autenticação real acontece no servidor (/api/auth) onde ficam as senhas.
+// Forjar este token não dá acesso a nada sem a senha real do servidor.
+const JWT_SECRET = 'ek_session_validator_v1_local_only'
 
 async function signToken(payload: object): Promise<string> {
   const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))

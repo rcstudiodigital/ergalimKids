@@ -14,7 +14,6 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError]       = useState('')
-  const [showDemo, setShowDemo] = useState(false)
 
   if (!loading && user) { navigate(redirect, { replace: true }); return null }
 
@@ -112,24 +111,6 @@ export default function LoginPage() {
 
           {/* Demo */}
           <div className="mt-5">
-            <button onClick={() => setShowDemo(!showDemo)}
-              className="text-xs text-gray-400 hover:text-gray-600 underline w-full text-center font-bold">
-              {showDemo ? 'Ocultar' : 'Ver'} credenciais de demonstração
-            </button>
-            {showDemo && (
-              <div className="mt-3 p-4 bg-bg-blue border-2 border-brand-sky/30 rounded-2xl text-xs space-y-2">
-                <p className="font-black text-brand-navy mb-2">⚠️ Apenas para testes</p>
-                <button onClick={() => { setEmail('admin@ergalimkids.com'); setPassword('Admin@2025!') }}
-                  className="w-full text-left p-2.5 bg-white rounded-xl hover:bg-gray-50 transition-colors border-2 border-gray-100 font-bold text-brand-navy">
-                  🔑 <strong>Admin</strong> — admin@ergalimkids.com
-                </button>
-                <button onClick={() => { setEmail('owner@ergalimkids.com'); setPassword('Owner@2025!') }}
-                  className="w-full text-left p-2.5 bg-white rounded-xl hover:bg-gray-50 transition-colors border-2 border-gray-100 font-bold text-brand-navy">
-                  🏪 <strong>Dono</strong> — owner@ergalimkids.com
-                </button>
-                <p className="text-gray-400 italic text-center">Clique para preencher automaticamente</p>
-              </div>
-            )}
           </div>
         </div>
 

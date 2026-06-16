@@ -51,7 +51,7 @@ export default function AccountOrders() {
                 <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
                   {order.items.map((item, i) => (
                     <div key={i} className="shrink-0 w-14 h-14 rounded-xl overflow-hidden bg-gray-100">
-                      <img src={item.productImage} alt={item.productName} className="w-full h-full object-cover" />
+                      <img src={item.image || item.productImage || ""} alt={item.productName} className="w-full h-full object-cover bg-gray-200" />
                     </div>
                   ))}
                 </div>

@@ -28,6 +28,8 @@ export default function CheckoutPage() {
   const { user } = useAuth()
   const { items, total, subtotal, discount, clearCart } = useCart()
   const { settings, addOrder } = useStore()
+  const { profile } = useCustomer()
+  const addresses = profile?.addresses || []
   const navigate = useNavigate()
 
   const [step, setStep]           = useState<Step>('address')

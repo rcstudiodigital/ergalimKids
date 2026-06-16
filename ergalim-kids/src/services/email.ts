@@ -14,7 +14,6 @@
  * para não expor a chave no frontend. Esta implementação é para demonstração.
  */
 
-const RESEND_KEY  = import.meta.env.VITE_RESEND_API_KEY || ''
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL    || 'contato@ergalimkids.com.br'
 const STORE_NAME  = 'Ergalim Kids'
 const IS_DEV      = import.meta.env.DEV
@@ -89,7 +88,7 @@ const baseTemplate = (content: string) => `
     <div class="body">${content}</div>
     <div class="footer">
       <p>Ergalim Kids · Rua Dom João Braga, 236 · Alto da Serra</p>
-      <p>WhatsApp: (24) 99239-1998 · ${STORE_EMAIL}</p>
+      <p>WhatsApp: (21) 99211-0726 · ${STORE_EMAIL}</p>
       <p style="margin-top:8px; color:#ccc">Este é um e-mail automático, por favor não responda.</p>
     </div>
   </div>
