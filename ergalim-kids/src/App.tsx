@@ -130,6 +130,8 @@ export default function App() {
                     <Route path="financial"    element={<OwnerFinancial/>}/>
                     <Route path="promotions"   element={<OwnerPromotions/>}/>
                     <Route path="shipping"     element={<OwnerShipping/>}/>
+                    <Route path="payment"      element={<OwnerPayment/>}/>
+                    <Route path="freight"      element={<OwnerFreight/>}/>
                   </Route>
                 </Routes>
               </Suspense>

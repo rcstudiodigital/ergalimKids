@@ -1,7 +1,6 @@
 import React, { useState } from 'react'
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom'
-import {
-  LayoutDashboard, Package, ShoppingBag,
+import { CreditCard, LayoutDashboard, Package, ShoppingBag,
   BarChart2, Tag, Truck, Menu, X, LogOut, ChevronRight, Star
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -15,6 +14,8 @@ const BASE_MENU = [
   { label: 'Financeiro', href: '/owner/financial',   icon: BarChart2,       permKey: 'canViewFinancial',      desc: 'Receitas e relatórios' },
   { label: 'Promoções',  href: '/owner/promotions',  icon: Tag,             permKey: 'canManagePromotions',   desc: 'Cupons e descontos' },
   { label: 'Entrega',    href: '/owner/shipping',    icon: Truck,           permKey: 'canManageShipping',     desc: 'Opções de envio' },
+  { label: 'Pagamento',  href: '/owner/payment',     icon: CreditCard,      permKey: 'canManagePaymentGateway',     desc: 'Mercado Pago / PIX' },
+  { label: 'Transportadoras', href: '/owner/freight', icon: Truck,          permKey: 'canManageShipping',     desc: 'Frete e envio' },
 ] as const
 
 export default function OwnerLayout() {

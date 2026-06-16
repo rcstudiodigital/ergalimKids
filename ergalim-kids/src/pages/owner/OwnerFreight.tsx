@@ -1,0 +1,122 @@
+import React from 'react'
+import { Truck, ExternalLink, Package, Clock, DollarSign } from 'lucide-react'
+import { Link } from 'react-router-dom'
+
+export default function OwnerFreight() {
+  return (
+    <div className="space-y-6 animate-fadeUp max-w-2xl">
+      <div>
+        <h1 className="text-2xl font-black text-brand-navy flex items-center gap-2">
+          <Truck size={22} className="text-brand-pink"/> Frete e Transportadoras
+        </h1>
+        <p className="text-sm text-gray-500 mt-1">Configure como calcular e cobrar o frete dos seus clientes.</p>
+      </div>
+
+      {/* Status atual */}
+      <div className="card p-4 bg-brand-navy text-white">
+        <p className="font-black text-sm mb-1">📦 Frete atual configurado</p>
+        <p className="text-xs text-white/70">Você tem métodos de entrega configurados em <strong>Entrega</strong>. Para editar preços e prazos, acesse:</p>
+        <Link to="/owner/shipping" className="inline-flex items-center gap-1 mt-2 text-xs font-black text-brand-yellow hover:underline">
+          ✏️ Ir para Opções de Entrega →
+        </Link>
+      </div>
+
+      {/* Opção 1: Correios manual */}
+      <div className="card p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-amber-100 flex items-center justify-center shrink-0">
+            <Package size={22} className="text-amber-600"/>
+          </div>
+          <div>
+            <p className="font-black text-brand-navy">Correios — Manual</p>
+            <p className="text-xs text-gray-500 mt-0.5">Você calcula o frete no site dos Correios e define preços fixos por região.</p>
+            <span className="inline-block mt-1 text-xs font-black px-2 py-0.5 bg-green-100 text-green-700 rounded-full">✅ Já está funcionando</span>
+          </div>
+        </div>
+        <div className="bg-gray-50 rounded-xl p-4 space-y-2">
+          <p className="text-xs font-black text-gray-600">Como funciona agora:</p>
+          <ul className="text-xs text-gray-500 space-y-1">
+            <li>• PAC e SEDEX com preços fixos que você definiu</li>
+            <li>• Cliente escolhe na hora do checkout</li>
+            <li>• Você embala e leva até a agência dos Correios</li>
+          </ul>
+        </div>
+        <a href="https://www.correios.com.br/precos-e-prazos" target="_blank" rel="noreferrer"
+          className="inline-flex items-center gap-1 text-xs font-black text-amber-600 hover:underline">
+          Calcular preços no site dos Correios <ExternalLink size={11}/>
+        </a>
+      </div>
+
+      {/* Opção 2: Melhor Envio */}
+      <div className="card p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-blue-100 flex items-center justify-center shrink-0">
+            <Truck size={22} className="text-blue-600"/>
+          </div>
+          <div>
+            <p className="font-black text-brand-navy">Melhor Envio — Automático</p>
+            <p className="text-xs text-gray-500 mt-0.5">Calcula o frete automaticamente pelo CEP do cliente. Integra Correios, Jadlog e outros.</p>
+            <span className="inline-block mt-1 text-xs font-black px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">🔧 Requer configuração</span>
+          </div>
+        </div>
+        <div className="bg-blue-50 rounded-xl p-4 space-y-3">
+          <p className="text-xs font-black text-blue-800">Como configurar:</p>
+          <ol className="text-xs text-blue-700 space-y-1.5 pl-3 list-decimal">
+            <li>Crie conta grátis em <strong>melhorenvio.com.br</strong></li>
+            <li>Gere um token de acesso nas configurações</li>
+            <li>Me passa o token e eu integro no site</li>
+            <li>O frete passa a ser calculado automaticamente pelo CEP</li>
+          </ol>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          {[
+            { icon: DollarSign, label: 'Preço', value: 'Grátis para usar' },
+            { icon: Clock, label: 'Setup', value: '~30 minutos' },
+            { icon: Truck, label: 'Carriers', value: 'Correios + Jadlog' },
+          ].map(({ icon: Icon, label, value }) => (
+            <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
+              <Icon size={16} className="text-blue-500 mx-auto mb-1"/>
+              <p className="text-xs font-black text-gray-600">{label}</p>
+              <p className="text-xs text-gray-500">{value}</p>
+            </div>
+          ))}
+        </div>
+        <a href="https://melhorenvio.com.br" target="_blank" rel="noreferrer"
+          className="btn-outline w-full flex items-center justify-center gap-2 text-sm py-2.5 border-blue-300 text-blue-600 hover:bg-blue-50">
+          Conhecer o Melhor Envio <ExternalLink size={14}/>
+        </a>
+      </div>
+
+      {/* Opção 3: Frenet */}
+      <div className="card p-5 space-y-4">
+        <div className="flex items-start gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
+            <Truck size={22} className="text-purple-600"/>
+          </div>
+          <div>
+            <p className="font-black text-brand-navy">Frenet — Multi-transportadoras</p>
+            <p className="text-xs text-gray-500 mt-0.5">Compara preços entre várias transportadoras e mostra a mais barata para o cliente.</p>
+            <span className="inline-block mt-1 text-xs font-black px-2 py-0.5 bg-purple-100 text-purple-700 rounded-full">🔧 Requer configuração</span>
+          </div>
+        </div>
+        <div className="bg-purple-50 rounded-xl p-4 text-xs text-purple-700 space-y-1">
+          <p className="font-black">Vantagens:</p>
+          <ul className="space-y-1 pl-3">
+            <li>• Compara Correios, Jadlog, Loggi, Total Express e outros</li>
+            <li>• Mostra o prazo e preço de cada um para o cliente</li>
+            <li>• Você tem desconto por volume</li>
+          </ul>
+        </div>
+        <a href="https://frenet.com.br" target="_blank" rel="noreferrer"
+          className="btn-outline w-full flex items-center justify-center gap-2 text-sm py-2.5 border-purple-300 text-purple-600 hover:bg-purple-50">
+          Conhecer a Frenet <ExternalLink size={14}/>
+        </a>
+      </div>
+
+      <div className="card p-4 bg-brand-pink/5 border border-brand-pink/20">
+        <p className="text-xs font-black text-brand-pink mb-1">💡 Recomendação</p>
+        <p className="text-xs text-gray-600">Para começar: continue com o frete manual (já funciona). Quando as vendas crescerem, integre o <strong>Melhor Envio</strong> — é grátis e automatiza tudo. Me chame quando quiser integrar!</p>
+      </div>
+    </div>
+  )
+}
