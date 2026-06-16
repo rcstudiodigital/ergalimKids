@@ -38,6 +38,7 @@ export default function CheckoutPage() {
   const [loading, setLoading]     = useState(false)
   const [pixCode, setPixCode]     = useState('')
   const [pixQR,   setPixQR]       = useState('')
+  const [showManualPix, setShowManualPix] = useState(false)
   const [copied,  setCopied]      = useState(false)
   const [orderId, setOrderId]     = useState('')
 
@@ -161,7 +162,16 @@ export default function CheckoutPage() {
         } catch { /* cai no fluxo manual abaixo */ }
       }
 
-      // 4. Sem gateway → finaliza direto (pagamento combinado via WhatsApp/PIX manual)
+      // 4. PIX manual configurado pelo Gabriel → mostra a chave PIX
+      const pixManual = settings.paymentMethods?.pix
+      if (payMethod === 'pix' && pixManual?.enabled && pixManual?.key) {
+        setOrderId(oid)
+        setShowManualPix(true)
+        clearCart()
+        return
+      }
+
+      // 5. Sem gateway → finaliza direto (pagamento combinado via WhatsApp)
       clearCart()
       navigate(`/order-success?id=${oid}`)
     } catch (e) {
@@ -176,6 +186,61 @@ export default function CheckoutPage() {
     setCopied(true)
     toast.success('Código Pix copiado!')
     setTimeout(() => setCopied(false), 3000)
+  }
+
+  // ── TELA PIX MANUAL (chave do Gabriel) ──────────────────────────────────
+  if (showManualPix) {
+    const pixData = settings.paymentMethods?.pix
+    const keyTypeLabels: Record<string, string> = {
+      cpf: 'CPF', cnpj: 'CNPJ', email: 'E-mail', phone: 'Telefone', random: 'Chave aleatória'
+    }
+    return (
+      <div className="max-w-md mx-auto px-4 py-10 text-center">
+        <div className="card-kid p-8">
+          <div className="text-5xl mb-3">🔵</div>
+          <h1 className="font-black text-2xl text-brand-navy mb-2">Pague com Pix</h1>
+          <p className="text-sm font-bold text-gray-500 mb-6">
+            Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(finalTotal)}
+          </p>
+
+          <div className="bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-left">
+            <p className="text-xs font-black text-gray-500 mb-1">Chave Pix ({keyTypeLabels[pixData?.keyType || 'cpf']})</p>
+            <div className="flex gap-2 items-center mb-3">
+              <input readOnly value={pixData?.key || ''} className="input-field text-sm font-mono flex-1 bg-white select-all py-2"/>
+              <button onClick={() => { navigator.clipboard.writeText(pixData?.key || ''); setCopied(true); setTimeout(() => setCopied(false), 2000); toast.success('Chave Pix copiada!') }}
+                className={`btn-navy px-4 shrink-0 py-2 ${copied ? '!bg-green-600' : ''}`}>
+                {copied ? <CheckCircle size={16}/> : <Copy size={16}/>}
+              </button>
+            </div>
+            {pixData?.holderName && (
+              <p className="text-xs text-gray-600"><strong>Titular:</strong> {pixData.holderName}</p>
+            )}
+            <p className="text-lg font-black text-brand-navy mt-2">Valor: {formatCurrency(finalTotal)}</p>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700 text-left mb-5">
+            <p className="font-black mb-1">📱 Como pagar:</p>
+            <ol className="list-decimal pl-4 space-y-0.5">
+              <li>Abra o app do seu banco</li>
+              <li>Escolha pagar com Pix → Copia e Cola (ou a chave acima)</li>
+              <li>Confira o valor e confirme</li>
+              <li>Envie o comprovante pelo WhatsApp</li>
+            </ol>
+          </div>
+
+          <a href={`https://wa.me/${(settings.storeWhatsapp || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Olá! Acabei de fazer o pedido ${orderId} e vou enviar o comprovante do Pix 📄`)}`}
+            target="_blank" rel="noreferrer"
+            className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-2xl mb-3 transition-colors">
+            <span>💬</span> Enviar comprovante no WhatsApp
+          </a>
+
+          <button onClick={() => navigate(`/order-success?id=${orderId}`)}
+            className="btn-outline w-full justify-center text-sm">
+            ✓ Já enviei o comprovante
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // ── TELA PIX ────────────────────────────────────────────────────────────

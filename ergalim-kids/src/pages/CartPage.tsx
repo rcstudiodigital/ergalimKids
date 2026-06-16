@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Trash2, Plus, Minus, ShoppingBag, Tag, X, Truck } from 'lucide-react'
+import { Trash2, Plus, Minus, ShoppingBag, Tag, X } from 'lucide-react'
 import { useCart } from '@/context/CartContext'
 import { useStore } from '@/context/StoreContext'
 import { useAuth } from '@/context/AuthContext'
@@ -8,16 +8,13 @@ import { formatCurrency } from '@/utils/security'
 import toast from 'react-hot-toast'
 
 export default function CartPage() {
-  const { items, removeItem, updateQty, subtotal, discount, coupon, applyCoupon, removeCoupon, itemCount, selectedShippingId, setSelectedShippingId } = useCart()
+  const { items, removeItem, updateQty, subtotal, discount, coupon, applyCoupon, removeCoupon, itemCount } = useCart()
   const { settings } = useStore()
   const { user } = useAuth()
   const navigate = useNavigate()
   const [couponInput, setCouponInput] = useState('')
 
-  const activeShipping = settings.shippingOptions.filter(s => s.active)
-  const selectedOption = activeShipping.find(s => s.id === selectedShippingId)
-  const shippingPrice = subtotal >= settings.freeShippingAbove ? 0 : (selectedOption?.price ?? 0)
-  const total = subtotal - discount + shippingPrice
+  const total = subtotal - discount  // frete é calculado no checkout
 
   const handleCoupon = () => {
     if (applyCoupon(couponInput)) { toast.success('Cupom aplicado! 🎉'); setCouponInput('') }
@@ -26,7 +23,6 @@ export default function CartPage() {
 
   const handleCheckout = () => {
     if (!user) { navigate('/login?redirect=/checkout'); return }
-    if (!selectedShippingId && activeShipping.length > 0) { toast.error('Selecione uma opção de entrega'); return }
     navigate('/checkout')
   }
 
@@ -71,38 +67,13 @@ export default function CartPage() {
 
         {/* Resumo */}
         <div className="space-y-4">
-          {/* Entrega */}
-          <div className="card p-5">
-            <h3 className="font-black text-brand-navy flex items-center gap-2 mb-3"><Truck size={16} className="text-brand-pink"/> Opção de Entrega</h3>
-            {subtotal >= settings.freeShippingAbove ? (
-              <div className="bg-green-50 border border-green-200 rounded-xl p-3 text-sm text-green-700 font-bold">
-                🎉 Frete grátis aplicado!
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {activeShipping.map(opt => (
-                  <label key={opt.id} className={`flex items-center gap-3 p-3 border-2 rounded-xl cursor-pointer transition-colors ${selectedShippingId === opt.id ? 'border-brand-pink bg-brand-pink/5' : 'border-gray-200 hover:border-gray-300'}`}>
-                    <input type="radio" name="shipping" value={opt.id} checked={selectedShippingId === opt.id} onChange={() => setSelectedShippingId(opt.id)} className="text-brand-pink" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-brand-navy">{opt.name}</p>
-                      <p className="text-xs text-gray-400">{opt.estimatedDays}</p>
-                      {opt.description && <p className="text-xs text-gray-400">{opt.description}</p>}
-                    </div>
-                    <span className={`text-sm font-black ${opt.price === 0 ? 'text-green-600' : 'text-brand-navy'}`}>{opt.price === 0 ? 'Grátis' : formatCurrency(opt.price)}</span>
-                  </label>
-                ))}
-                <p className="text-xs text-gray-400 mt-1">Faltam {formatCurrency(settings.freeShippingAbove - subtotal)} para frete grátis!</p>
-              </div>
-            )}
-          </div>
-
           {/* Cupom + Resumo */}
           <div className="card p-5">
             <h3 className="font-black text-brand-navy mb-4">Resumo do Pedido</h3>
             <div className="space-y-2 text-sm mb-4">
               <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{formatCurrency(subtotal)}</span></div>
               {discount > 0 && <div className="flex justify-between text-green-600"><span>Desconto ({coupon})</span><span>-{formatCurrency(discount)}</span></div>}
-              <div className="flex justify-between text-gray-600"><span>Frete</span><span className={shippingPrice === 0 ? 'text-green-600 font-bold' : ''}>{shippingPrice === 0 ? 'Grátis' : selectedOption ? formatCurrency(shippingPrice) : 'Selecione'}</span></div>
+              <div className="flex justify-between text-gray-600"><span>Frete</span><span className="text-gray-400">Calculado no checkout</span></div>
               <div className="flex justify-between font-black text-brand-navy text-base border-t border-gray-100 pt-2"><span>Total</span><span>{formatCurrency(total)}</span></div>
             </div>
 
