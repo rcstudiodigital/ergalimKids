@@ -64,6 +64,12 @@ function AppWithCustomer({ children }: { children: React.ReactNode }) {
   return <CustomerProvider userId={user?.id}>{children}</CustomerProvider>
 }
 
+// CartWithCoupons injeta os cupons do Firebase no CartProvider
+function CartWithCoupons({ children }: { children: React.ReactNode }) {
+  const { coupons } = useStore()
+  return <CartProvider coupons={coupons}>{children}</CartProvider>
+}
+
 export default function App() {
   return (
     <BrowserRouter>
