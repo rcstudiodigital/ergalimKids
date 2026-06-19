@@ -12,15 +12,15 @@ service cloud.firestore {
     // PEDIDOS — leitura pública (cliente vê o próprio), escrita autenticada
     // O webhook do Mercado Pago atualiza via REST sem auth — permitido
     // apenas para o campo 'status' mudar para 'paid'/'cancelled'
-    match /orders/{orderId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null
-                    // OU é o webhook atualizando status de pagamento
-                    || (request.resource.data.diff(resource.data).affectedKeys()
-                          .hasOnly(['status', 'paymentId', 'updatedAt']));
-      allow delete: if request.auth != null;
-    }
+match /orders/{orderId} {
+  // Cliente vê apenas o próprio pedido
+  allow read: if request.auth != null
+              && request.auth.uid == resource.data.customerId;
+  allow create: if request.auth != null;
+  allow update: if request.auth != null
+              || (request.resource.data.diff(resource.data)
+                    .affectedKeys().hasOnly(['status','paymentId','updatedAt']));
+}
 
     // CONFIGURAÇÕES — leitura pública, escrita autenticada
     match /settings/{docId} {
