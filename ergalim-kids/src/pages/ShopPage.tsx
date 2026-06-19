@@ -25,7 +25,7 @@ function ProductCard({ product }: { product: any }) {
           <span className="font-black text-brand-navy">{formatCurrency(product.price)}</span>
           {product.originalPrice && <span className="text-xs text-gray-400 line-through">{formatCurrency(product.originalPrice)}</span>}
         </div>
-        <button onClick={() => { const v = product.variants[0]; if(v){addItem(product,v.size,v.color);toast.success('Adicionado! 🛍️')}}} className="btn-navy w-full mt-3 py-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+        <button onClick={() => { const v = product.variants[0]; if(v){addItem(product,v.size,v.color);toast.success('Adicionado ao carrinho')}}} className="btn-navy w-full mt-3 py-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
           Adicionar
         </button>
       </div>

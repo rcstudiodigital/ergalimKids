@@ -209,7 +209,7 @@ export default function CheckoutPage() {
     return (
       <div className="max-w-md mx-auto px-4 py-10 text-center">
         <div className="card-kid p-8">
-          <div className="text-5xl mb-3">🔵</div>
+          <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-brand-blue/10 flex items-center justify-center"><div className="w-7 h-7 rounded-full bg-brand-blue"/></div>
           <h1 className="font-black text-2xl text-brand-navy mb-2">Pague com Pix</h1>
           <p className="text-sm font-bold text-gray-500 mb-6">
             Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(paidAmount)}
@@ -231,7 +231,7 @@ export default function CheckoutPage() {
           </div>
 
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700 text-left mb-5">
-            <p className="font-black mb-1">📱 Como pagar:</p>
+            <p className="font-black mb-1">Como pagar:</p>
             <ol className="list-decimal pl-4 space-y-0.5">
               <li>Abra o app do seu banco</li>
               <li>Escolha pagar com Pix → Copia e Cola (ou a chave acima)</li>
@@ -243,7 +243,7 @@ export default function CheckoutPage() {
           <a href={`https://wa.me/${(settings.storeWhatsapp || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Olá! Acabei de fazer o pedido ${orderId} e vou enviar o comprovante do Pix 📄`)}`}
             target="_blank" rel="noreferrer"
             className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white font-black py-3 rounded-2xl mb-3 transition-colors">
-            <span>💬</span> Enviar comprovante no WhatsApp
+            Enviar comprovante no WhatsApp
           </a>
 
           <button onClick={() => navigate(`/order-success?id=${orderId}`)}
@@ -259,7 +259,7 @@ export default function CheckoutPage() {
   if (pixCode) return (
     <div className="max-w-md mx-auto px-4 py-10 text-center">
       <div className="card-kid p-8">
-        <div className="text-5xl mb-3">🔵</div>
+        <div className="w-14 h-14 mx-auto mb-3 rounded-full bg-brand-blue/10 flex items-center justify-center"><div className="w-7 h-7 rounded-full bg-brand-blue"/></div>
         <h1 className="font-black text-2xl text-brand-navy mb-2">Pague com Pix</h1>
         <p className="text-sm font-bold text-gray-500 mb-6">
           Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(paidAmount)}
@@ -277,7 +277,7 @@ export default function CheckoutPage() {
           </button>
         </div>
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700 text-left mb-5">
-          <p className="font-black mb-1">⏱️ Válido por 30 minutos</p>
+          <p className="font-black mb-1">Válido por 30 minutos</p>
           <p className="font-bold">Após pagar você receberá a confirmação por e-mail.</p>
         </div>
         <button onClick={() => navigate(`/order-success?id=${orderId}`)}
@@ -329,12 +329,12 @@ export default function CheckoutPage() {
               if (!address.state)         { toast.error('Selecione o estado'); return }
               goNext('shipping')
             }} className="card-kid p-5 space-y-4">
-              <h2 className="font-black text-brand-navy text-lg">📍 Endereço de Entrega</h2>
+              <h2 className="font-black text-brand-navy text-lg">Endereço de Entrega</h2>
 
               <div className="grid sm:grid-cols-2 gap-3">
                 {/* Nome */}
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-black text-gray-500 block mb-1">👤 Nome completo *</label>
+                  <label className="text-xs font-black text-gray-500 block mb-1">Nome completo *</label>
                   <input required value={address.name}
                     onChange={e => setAddress(a => ({...a, name: e.target.value}))}
                     className="input-field" placeholder="Nome do destinatário"/>
@@ -342,7 +342,7 @@ export default function CheckoutPage() {
 
                 {/* Telefone */}
                 <div>
-                  <label className="text-xs font-black text-gray-500 block mb-1">📱 WhatsApp *</label>
+                  <label className="text-xs font-black text-gray-500 block mb-1">WhatsApp *</label>
                   <input required value={address.phone} type="tel"
                     onChange={e => setAddress(a => ({...a, phone: e.target.value}))}
                     className="input-field" placeholder="(99) 9 9999-9999"/>
@@ -351,7 +351,7 @@ export default function CheckoutPage() {
                 {/* CEP com busca automática */}
                 <div>
                   <label className="text-xs font-black text-gray-500 block mb-1">
-                    📮 CEP *
+                    CEP *
                     {cepLoading && <span className="ml-2 text-brand-pink">buscando...</span>}
                   </label>
                   <div className="relative">
@@ -459,7 +459,7 @@ export default function CheckoutPage() {
                       </div>
                     </div>
                     <span className={`font-black text-sm ${opt.price === 0 ? 'text-green-600' : 'text-brand-navy'}`}>
-                      {opt.price === 0 ? '🚚 Grátis' : formatCurrency(opt.price)}
+                      {opt.price === 0 ? 'Grátis' : formatCurrency(opt.price)}
                     </span>
                   </label>
                 ))}
@@ -483,11 +483,11 @@ export default function CheckoutPage() {
 
             // PIX aparece se: Mercado Pago ativo (PIX automático) OU PIX manual configurado
             if (mpOk || pixManualOk) {
-              payOptions.push({ key:'pix', icon:'🔵', name:'Pix', sub: mpOk ? 'Aprovação imediata' : 'Chave Pix' })
+              payOptions.push({ key:'pix', icon:'pix', name:'Pix', sub: mpOk ? 'Aprovação imediata' : 'Chave Pix' })
             }
             // Cartão aparece SOMENTE se o Mercado Pago estiver configurado
             if (mpOk) {
-              payOptions.push({ key:'card', icon:'💳', name:'Cartão', sub:'Crédito / Débito' })
+              payOptions.push({ key:'card', icon:'card', name:'Cartão', sub:'Crédito / Débito' })
             }
 
             // Se nenhuma forma configurada → finaliza via WhatsApp
@@ -501,7 +501,7 @@ export default function CheckoutPage() {
 
                 {noPaymentConfigured ? (
                   <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-5 text-center">
-                    <div className="text-4xl mb-2">💬</div>
+                    
                     <p className="font-black text-brand-navy mb-1">Pagamento via WhatsApp</p>
                     <p className="text-xs text-gray-500">Após confirmar o pedido, combine o pagamento direto com a loja pelo WhatsApp.</p>
                   </div>
@@ -511,7 +511,9 @@ export default function CheckoutPage() {
                       {payOptions.map(opt => (
                         <button key={opt.key} onClick={() => setPayMethod(opt.key)}
                           className={`p-4 border-2 rounded-2xl flex flex-col items-center gap-2 transition-all ${payMethod===opt.key ? 'border-brand-pink bg-bg-soft' : 'border-gray-200 hover:border-gray-300'}`}>
-                          <span className="text-3xl">{opt.icon}</span>
+                          <span className="text-brand-blue">
+                            {opt.icon === 'pix' ? <QrCode size={28}/> : <CreditCard size={28}/>}
+                          </span>
                           <p className="font-black text-brand-navy text-sm">{opt.name}</p>
                           <p className="text-xs text-gray-400 font-bold">{opt.sub}</p>
                           {payMethod===opt.key && <span className="text-[10px] bg-brand-pink text-white px-2 py-0.5 rounded-full font-black">✓ Selecionado</span>}
@@ -520,8 +522,8 @@ export default function CheckoutPage() {
                     </div>
                     <div className={`p-3 rounded-2xl text-xs font-bold ${payMethod==='pix' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
                       {payMethod === 'pix'
-                        ? (mpOk ? '🔵 Após confirmar, você recebe o QR Code e código Pix. Aprovação instantânea!' : '🔵 Após confirmar, você verá a chave Pix para pagar e enviar o comprovante.')
-                        : '💳 Você será redirecionado para o Mercado Pago para inserir os dados do cartão com segurança.'}
+                        ? (mpOk ? 'Após confirmar, você recebe o QR Code e código Pix. Aprovação instantânea!' : 'Após confirmar, você verá a chave Pix para pagar e enviar o comprovante.')
+                        : 'Você será redirecionado para o Mercado Pago para inserir os dados do cartão com segurança.'}
                     </div>
                   </>
                 )}
@@ -540,22 +542,22 @@ export default function CheckoutPage() {
               <h2 className="font-black text-brand-navy text-lg">Revisar e Confirmar</h2>
               <div className="space-y-2">
                 <div className="p-4 bg-bg-page rounded-2xl">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">📍 Entrega</p>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">Entrega</p>
                   <p className="font-black text-brand-navy text-sm">{address.name}</p>
                   <p className="text-sm text-gray-600 font-bold">{address.street}, {address.number} {address.complement && `· ${address.complement}`}</p>
                   <p className="text-sm text-gray-500 font-bold">{address.neighborhood}, {address.city} – {address.state} · {address.zipCode}</p>
-                  <p className="text-xs text-gray-400 font-bold mt-1">📱 {address.phone}</p>
+                  <p className="text-xs text-gray-400 font-bold mt-1">{address.phone}</p>
                 </div>
                 <div className="p-4 bg-bg-page rounded-2xl">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">🚚 Envio</p>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">Envio</p>
                   <p className="font-black text-brand-navy text-sm">{chosenShipping?.name || 'Padrão'} — {chosenShipping?.estimatedDays}</p>
                 </div>
                 <div className="p-4 bg-bg-page rounded-2xl">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">💳 Pagamento</p>
-                  <p className="font-black text-brand-navy text-sm">{payMethod === 'pix' ? '🔵 Pix' : '💳 Cartão via Mercado Pago'}</p>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-1">Pagamento</p>
+                  <p className="font-black text-brand-navy text-sm">{payMethod === 'pix' ? 'Pix' : 'Cartão via Mercado Pago'}</p>
                 </div>
                 <div className="p-4 bg-bg-page rounded-2xl">
-                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">🛍️ Itens</p>
+                  <p className="text-xs font-black text-gray-400 uppercase tracking-wider mb-2">Itens</p>
                   <div className="space-y-2">
                     {items.map((item, i) => (
                       <div key={i} className="flex items-center gap-3">

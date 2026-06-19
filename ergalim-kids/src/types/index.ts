@@ -54,6 +54,22 @@ export interface HeroBanner {
   overlayOpacity: number  // 0–100
 }
 
+// ─── CARROSSEL DA HOME (editável pelo admin) ──────────────────────────────
+export interface CarouselSlide {
+  id: string
+  imageUrl: string        // URL da imagem do slide
+  title?: string          // título opcional sobre a imagem
+  subtitle?: string       // subtítulo opcional
+  buttonText?: string     // texto do botão (opcional)
+  buttonUrl?: string      // link do botão (opcional)
+}
+
+export interface HomeCarousel {
+  enabled: boolean        // mostra/esconde o carrossel
+  intervalMs: number      // duração de cada slide em milissegundos (ex: 5000)
+  slides: CarouselSlide[]
+}
+
 export interface HomeSection {
   id: string
   type: 'banner' | 'categories' | 'featured' | 'promo'
@@ -105,6 +121,7 @@ export interface SiteSettings {
   // ── CUSTOMIZAÇÃO VISUAL (admin) ────────────────────────────────────────
   categoryImages?: { meninas: string; meninos: string; conjuntos: string; novidades: string }
   hero: HeroBanner
+  carousel?: HomeCarousel
   homeSections: HomeSection[]
   theme: SiteTheme
 }

@@ -31,7 +31,7 @@ export default function ProductPage() {
   const handleAdd = () => {
     if (!size || !color) { toast.error('Selecione tamanho e cor'); return }
     addItem(product, size, color, qty)
-    toast.success('Adicionado ao carrinho! 🛍️')
+    toast.success('Adicionado ao carrinho')
   }
 
   return (

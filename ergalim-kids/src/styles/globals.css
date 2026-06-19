@@ -7,152 +7,128 @@
   html { scroll-behavior: smooth; }
 
   body {
-    @apply bg-bg-page text-brand-navy font-body antialiased;
+    @apply bg-bg-page text-brand-ink font-body antialiased;
     min-height: 100vh;
-    background-image:
-      radial-gradient(circle at 15% 15%, rgba(255,61,154,0.04) 0%, transparent 40%),
-      radial-gradient(circle at 85% 80%, rgba(79,195,247,0.05) 0%, transparent 40%);
   }
 
-  h1,h2,h3,h4,h5,h6 { @apply font-display font-black; }
+  h1,h2,h3,h4,h5,h6 { @apply font-display font-extrabold text-brand-ink; letter-spacing: -0.01em; }
   img { max-width: 100%; height: auto; display: block; }
 
-  :focus-visible { outline: 3px solid #FF3D9A; outline-offset: 2px; border-radius: 8px; }
-  ::-webkit-scrollbar { width: 6px; }
-  ::-webkit-scrollbar-track { background: #fce4ec; }
-  ::-webkit-scrollbar-thumb { background: #FF3D9A; border-radius: 99px; }
-
-  /* Google Font — já declarado no index.html */
+  :focus-visible { outline: 2px solid #3B6FE0; outline-offset: 2px; border-radius: 6px; }
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: #F4F6FB; }
+  ::-webkit-scrollbar-thumb { background: #C9D0E0; border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: #A9B3C9; }
 }
 
 @layer components {
 
   /* ── BOTÕES ──────────────────────────────────────────────────────── */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3.5
-           bg-brand-pink text-white font-black text-sm rounded-2xl
-           shadow-kid transition-all duration-150 select-none
-           hover:-translate-y-0.5 hover:shadow-kid-lg
-           active:translate-y-1 active:shadow-none
-           disabled:opacity-50 disabled:cursor-not-allowed disabled:translate-y-0 disabled:shadow-kid;
-  }
-
-  .btn-navy {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3.5
-           bg-brand-navy text-white font-black text-sm rounded-2xl
-           shadow-kid transition-all duration-150 select-none
-           hover:-translate-y-0.5 hover:shadow-kid-lg
-           active:translate-y-1 active:shadow-none
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           bg-brand-pink text-white font-bold text-sm rounded-full
+           shadow-soft transition-all duration-200 select-none
+           hover:bg-[#E13D78] hover:shadow-pop
+           active:scale-[0.98]
            disabled:opacity-50 disabled:cursor-not-allowed;
   }
 
+  .btn-navy {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           bg-brand-navy text-white font-bold text-sm rounded-full
+           shadow-soft transition-all duration-200 select-none
+           hover:bg-[#1A2455] active:scale-[0.98]
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-blue {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           bg-brand-blue text-white font-bold text-sm rounded-full
+           shadow-soft transition-all duration-200 select-none
+           hover:bg-[#2D5BC4] active:scale-[0.98];
+  }
+
   .btn-yellow {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3.5
-           bg-brand-yellow text-brand-navy font-black text-sm rounded-2xl
-           shadow-kid transition-all duration-150 select-none
-           hover:-translate-y-0.5 hover:shadow-kid-lg
-           active:translate-y-1 active:shadow-none;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3
+           bg-brand-yellow text-brand-ink font-bold text-sm rounded-full
+           shadow-soft transition-all duration-200 select-none
+           hover:brightness-95 active:scale-[0.98];
   }
 
   .btn-outline {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3
-           border-2 border-brand-navy text-brand-navy font-black text-sm rounded-2xl
-           bg-white transition-all duration-150 select-none
-           hover:bg-brand-navy hover:text-white hover:-translate-y-0.5
-           active:translate-y-0.5;
+           border border-line text-brand-navy font-bold text-sm rounded-full
+           bg-white transition-all duration-200 select-none
+           hover:border-brand-navy hover:bg-bg-soft active:scale-[0.98];
   }
 
   .btn-ghost {
     @apply inline-flex items-center justify-center gap-2 px-4 py-2
-           text-brand-navy font-bold text-sm rounded-xl
-           transition-all duration-150 select-none
+           text-brand-navy font-semibold text-sm rounded-full
+           transition-all duration-200 select-none
            hover:bg-bg-soft active:scale-95;
   }
 
   /* ── INPUTS ──────────────────────────────────────────────────────── */
   .input-field {
-    @apply w-full px-4 py-3 border-2 border-gray-200 rounded-2xl
-           text-sm text-brand-navy font-bold placeholder-gray-400 bg-white
-           focus:outline-none focus:border-brand-pink transition duration-200;
+    @apply w-full px-4 py-3 border border-line rounded-xl
+           text-sm text-brand-ink font-medium placeholder-gray-400 bg-white
+           focus:outline-none focus:border-brand-blue focus:ring-2 focus:ring-brand-blue/15
+           transition duration-200;
   }
 
   /* ── CARDS ───────────────────────────────────────────────────────── */
   .card {
-    @apply bg-white rounded-3xl border-2 border-gray-100 shadow-sm;
+    @apply bg-white rounded-2xl border border-line shadow-soft;
   }
 
   .card-kid {
-    @apply bg-white rounded-3xl border-2 border-gray-100 shadow-kid;
+    @apply bg-white rounded-2xl border border-line shadow-card;
   }
 
   /* ── PRODUTO CARD ────────────────────────────────────────────────── */
   .product-card {
-    @apply bg-white rounded-3xl overflow-hidden border-2 border-gray-100
-           shadow-kid transition-all duration-300 cursor-pointer
-           hover:-translate-y-1 hover:shadow-kid-lg;
+    @apply bg-white rounded-2xl overflow-hidden border border-line
+           shadow-soft transition-all duration-300 cursor-pointer
+           hover:-translate-y-1 hover:shadow-card-lg;
   }
 
   /* ── BADGES ──────────────────────────────────────────────────────── */
   .badge {
-    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-black;
+    @apply inline-flex items-center px-2.5 py-1 rounded-full text-2xs font-bold;
   }
   .badge-pink   { @apply badge bg-brand-pink text-white; }
   .badge-navy   { @apply badge bg-brand-navy text-white; }
-  .badge-yellow { @apply badge bg-brand-yellow text-brand-navy; }
-  .badge-green  { @apply badge bg-green-100 text-green-700; }
+  .badge-yellow { @apply badge bg-brand-yellow text-brand-ink; }
+  .badge-green  { @apply badge bg-brand-mint/15 text-brand-mint; }
   .badge-mint   { @apply badge bg-brand-mint text-white; }
   .badge-amber  { @apply badge bg-amber-100 text-amber-700; }
-  .badge-red    { @apply badge bg-red-100 text-red-700; }
+  .badge-red    { @apply badge bg-red-100 text-red-600; }
   .badge-gray   { @apply badge bg-gray-100 text-gray-600; }
+  .badge-coral  { @apply badge bg-brand-coral text-white; }
 
   /* ── SECTION TITLE ───────────────────────────────────────────────── */
   .section-title {
-    @apply font-display font-black text-brand-navy leading-tight;
+    @apply font-display font-extrabold text-brand-ink leading-tight;
   }
 
-  /* ── WOBBLY SHAPES ───────────────────────────────────────────────── */
-  .shape-blob {
-    border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
+  /* Eyebrow — rótulo pequeno acima de títulos */
+  .eyebrow {
+    @apply inline-block text-2xs font-bold tracking-[0.18em] uppercase text-brand-blue;
   }
 
-  .shape-star {
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-  }
-
-  /* ── PADRÃO DE PONTOS (background) ──────────────────────────────── */
+  /* ── PADRÃO DE PONTOS (background sutil) ──────────────────────────── */
   .dot-pattern {
-    background-image: radial-gradient(circle, rgba(255,61,154,0.12) 1px, transparent 1px);
-    background-size: 24px 24px;
-  }
-
-  /* ── WAVY DIVIDER ────────────────────────────────────────────────── */
-  .wavy-top {
-    position: relative;
-  }
-  .wavy-top::before {
-    content: '';
-    position: absolute;
-    top: -24px;
-    left: 0;
-    right: 0;
-    height: 24px;
-    background: inherit;
-    clip-path: ellipse(52% 60% at 50% 100%);
-  }
-
-  /* ── STICKER / FLOATING ELEMENT ──────────────────────────────────── */
-  .sticker {
-    @apply absolute rounded-full flex items-center justify-center
-           font-black text-white shadow-kid select-none pointer-events-none;
+    background-image: radial-gradient(circle, rgba(59,111,224,0.08) 1px, transparent 1px);
+    background-size: 22px 22px;
   }
 }
 
 @layer utilities {
-  .animate-fadeUp { animation: fadeUp 0.4s ease-out both; }
-  .border-3 { border-width: 3px; }
-  .text-stroke { -webkit-text-stroke: 2px currentColor; }
+  .animate-fadeUp { animation: fadeUp 0.45s ease-out both; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 }
-
 
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(12px); }

@@ -23,7 +23,7 @@ export default function LoginPage() {
     setSubmitting(true)
     try {
       await login(email, password)
-      toast.success('Seja bem-vindo(a)! 👋')
+      toast.success('Bem-vindo de volta')
       navigate(redirect, { replace: true })
     } catch (err: any) {
       setError(err.message || 'Erro ao entrar')
@@ -44,7 +44,7 @@ export default function LoginPage() {
           {top:'50%',left:'1%',  size:24, color:'#9C27B0'},
         ].map((s, i) => (
           <Star key={i} size={s.size} fill={s.color} color={s.color} opacity={0.2}
-            className="absolute animate-float" style={{top:s.top, left:(s as any).left, right:(s as any).right, animationDelay:`${i*0.6}s`}}/>
+            className="absolute " style={{top:s.top, left:(s as any).left, right:(s as any).right, animationDelay:`${i*0.6}s`}}/>
         ))}
       </div>
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
         {/* Logo */}
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 group">
-            <Star size={40} fill="#FFD600" color="#FFD600" className="group-hover:animate-wiggle"/>
+            <Star size={40} fill="#FFD600" color="#FFD600" className="group-hover:"/>
             <div className="text-left">
               <div className="font-black text-3xl text-brand-navy leading-none">ergalim</div>
               <div className="font-black text-3xl text-brand-pink leading-none">kids</div>
@@ -63,7 +63,7 @@ export default function LoginPage() {
         {/* Card de login */}
         <div className="card-kid p-8">
           <h1 className="font-black text-2xl text-brand-navy text-center mb-1">
-            Olá! Bem-vindo(a)! 👋
+            Bem-vindo de volta
           </h1>
           <p className="text-center text-sm text-gray-500 font-bold mb-6">
             Não tem conta?{' '}
@@ -78,7 +78,7 @@ export default function LoginPage() {
             )}
 
             <div>
-              <label className="text-sm font-black text-brand-navy block mb-1.5">📧 E-mail</label>
+              <label className="text-sm font-black text-brand-navy block mb-1.5">E-mail</label>
               <div className="relative">
                 <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"/>
                 <input type="email" autoComplete="email" required value={email}
@@ -89,7 +89,7 @@ export default function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-sm font-black text-brand-navy">🔒 Senha</label>
+                <label className="text-sm font-black text-brand-navy">Senha</label>
                 <Link to="/forgot-password" className="text-xs text-brand-pink hover:underline font-black">Esqueci a senha</Link>
               </div>
               <div className="relative">
@@ -105,7 +105,7 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={submitting} className="btn-primary w-full py-4 text-base mt-2">
-              {submitting ? '⏳ Entrando...' : '🚀 Entrar'}
+              {submitting ? 'Entrando...' : 'Entrar'}
             </button>
           </form>
 
@@ -115,7 +115,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-gray-400 font-bold mt-6">
-          🔒 Seus dados estão seguros com a gente
+          Seus dados estão seguros com a gente
         </p>
       </div>
     </div>

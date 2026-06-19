@@ -32,6 +32,28 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     buttonUrl: '/shop',
     overlayOpacity: 75,
   },
+  carousel: {
+    enabled: true,
+    intervalMs: 5000,
+    slides: [
+      {
+        id: 'slide-1',
+        imageUrl: 'https://images.unsplash.com/photo-1503944583220-79d8926ad5e2?w=1600&q=80',
+        title: 'Coleção Inverno 2026',
+        subtitle: 'Conforto e estilo para os dias frios',
+        buttonText: 'Ver coleção',
+        buttonUrl: '/shop?new=true',
+      },
+      {
+        id: 'slide-2',
+        imageUrl: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=1600&q=80',
+        title: 'Novidades chegando',
+        subtitle: 'As peças mais fofas para os pequenos',
+        buttonText: 'Explorar',
+        buttonUrl: '/shop',
+      },
+    ],
+  },
   homeSections: [
     { id: 'benefits',   type: 'banner',     title: 'Benefícios',           visible: true },
     { id: 'categories', type: 'categories',  title: 'Categorias',           visible: true },

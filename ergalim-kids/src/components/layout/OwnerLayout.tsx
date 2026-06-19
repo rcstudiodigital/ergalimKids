@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import { CreditCard, LayoutDashboard, Package, ShoppingBag,
-  BarChart2, Tag, Truck, Menu, X, LogOut, ChevronRight, Star
+  BarChart2, Tag, Truck, Menu, X, LogOut, ChevronRight, Monitor
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import { useStore } from '@/context/StoreContext'
@@ -16,6 +16,7 @@ const BASE_MENU = [
   { label: 'Entrega',    href: '/owner/shipping',    icon: Truck,           permKey: 'canManageShipping',     desc: 'Opções de envio' },
   { label: 'Pagamento',  href: '/owner/payment',     icon: CreditCard,      permKey: 'canManagePaymentGateway',     desc: 'Mercado Pago / PIX' },
   { label: 'Transportadoras', href: '/owner/freight', icon: Truck,          permKey: 'canManageShipping',     desc: 'Frete e envio' },
+  { label: 'Carrossel',  href: '/owner/carousel',    icon: Monitor,         permKey: 'canEditSiteContent',    desc: 'Banner da home' },
 ] as const
 
 export default function OwnerLayout() {
@@ -46,14 +47,16 @@ export default function OwnerLayout() {
       {/* ── SIDEBAR ─────────────────────────────────────────────────── */}
       <aside className={`
         fixed lg:static inset-y-0 left-0 z-40 w-60 bg-white border-r-2 border-gray-100
-        flex flex-col transform transition-transform duration-200 shadow-kid
+        flex flex-col transform transition-transform duration-200 shadow-card
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-5 border-b-2 border-gray-100">
           <Link to="/" className="flex items-center gap-2">
-            <Star size={18} fill="#FFD600" color="#FFD600"/>
-            <span className="font-black text-brand-navy text-lg">ergalim <span className="text-brand-pink">kids</span></span>
+            <div className="w-7 h-7 rounded-lg bg-brand-pink flex items-center justify-center">
+              <span className="text-white font-display font-extrabold text-sm leading-none">e</span>
+            </div>
+            <span className="font-display font-extrabold text-brand-ink text-lg">ergalim <span className="text-brand-pink">kids</span></span>
           </Link>
           <button className="lg:hidden text-gray-400" onClick={() => setSidebarOpen(false)}>
             <X size={18}/>
@@ -69,7 +72,7 @@ export default function OwnerLayout() {
             <div className="min-w-0">
               <p className="text-brand-navy text-sm font-black truncate">{user?.name}</p>
               <span className="text-[11px] font-black text-brand-pink bg-brand-pink/10 px-2 py-0.5 rounded-full">
-                🏪 Proprietário
+                Proprietário
               </span>
             </div>
           </div>
@@ -85,7 +88,7 @@ export default function OwnerLayout() {
               <Link key={href} to={href} className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition-all
                 ${active
-                  ? 'bg-brand-navy text-white shadow-kid-sm'
+                  ? 'bg-brand-navy text-white shadow-soft'
                   : 'text-gray-500 hover:bg-bg-soft hover:text-brand-navy'}
               `}>
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-gray-100'}`}>

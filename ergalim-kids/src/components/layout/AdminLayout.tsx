@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation, Navigate } from 'react-router-dom'
 import {
   LayoutDashboard, Package, ShoppingBag, Users,
   BarChart2, Palette, Shield, CreditCard,
-  Menu, X, LogOut, ChevronRight, Star, Settings, Truck,
+  Menu, X, LogOut, ChevronRight, Settings, Truck,
   Megaphone, Mail
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
@@ -54,8 +54,8 @@ export default function AdminLayout() {
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-5 border-b border-gray-800">
           <Link to="/" className="flex items-center gap-2">
-            <Star size={18} fill="#FFD600" color="#FFD600"/>
-            <span className="font-black text-white text-lg">ergalim <span className="text-brand-pink">kids</span></span>
+            <div className="w-7 h-7 rounded-lg bg-brand-pink flex items-center justify-center"><span className="text-white font-display font-extrabold text-sm leading-none">e</span></div>
+            <span className="font-display font-extrabold text-white text-lg">ergalim <span className="text-brand-pink">kids</span></span>
           </Link>
           <button className="lg:hidden text-gray-400 hover:text-white" onClick={() => setSidebarOpen(false)}>
             <X size={18}/>
@@ -71,7 +71,7 @@ export default function AdminLayout() {
             <div className="min-w-0">
               <p className="text-white text-sm font-black truncate">{user?.name}</p>
               <span className="text-[11px] font-black text-brand-pink bg-brand-pink/15 px-2 py-0.5 rounded-full">
-                🔐 Admin
+                Admin
               </span>
             </div>
           </div>
@@ -87,7 +87,7 @@ export default function AdminLayout() {
               <Link key={href} to={href} className={`
                 flex items-center gap-3 px-3 py-2.5 rounded-2xl text-sm font-bold transition-all
                 ${active
-                  ? 'bg-brand-pink text-white shadow-kid-sm'
+                  ? 'bg-brand-pink text-white shadow-soft'
                   : 'text-gray-400 hover:bg-gray-800 hover:text-white'}
               `}>
                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-gray-800'}`}>

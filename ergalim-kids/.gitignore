@@ -6,7 +6,6 @@ dist/
 build/
 
 # NUNCA commitar — contém senhas e chaves secretas
-.env.example
 .env.local
 
 # Sistema

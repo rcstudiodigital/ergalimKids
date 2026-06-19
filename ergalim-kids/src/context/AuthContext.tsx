@@ -69,8 +69,8 @@ async function verifyToken(token: string): Promise<any | null> {
 // STAFF_USERS: usado apenas em dev local (sem senha real)
 // Em produção, a autenticação é feita via /api/auth (servidor seguro)
 const STAFF_USERS = [
-  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || import.meta.env.DEV ? (import.meta.env.VITE_DEV_ADMIN_PASS ?? '') : '', role: 'admin', hash: import.meta.env.VITE_DEV_ADMIN_PASS ?? '' },
-  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || import.meta.env.DEV ? (import.meta.env.VITE_DEV_OWNER_PASS ?? '') : '', role: 'owner', hash: import.meta.env.VITE_DEV_OWNER_PASS ?? '' },
+  { id: '1', name: 'Admin',           email: import.meta.env.VITE_ADMIN_EMAIL || 'admin@ergalimkids.com', role: 'admin', hash: import.meta.env.DEV ? (import.meta.env.VITE_DEV_ADMIN_PASS ?? '') : '' },
+  { id: '2', name: 'Gabriel Furtado', email: import.meta.env.VITE_OWNER_EMAIL || 'owner@ergalimkids.com', role: 'owner', hash: import.meta.env.DEV ? (import.meta.env.VITE_DEV_OWNER_PASS ?? '') : '' },
 ]
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -185,25 +185,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: normalEmail, password }),
       })
-      apiAvailable = true // API respondeu (mesmo que com erro)
 
-      if (authRes.ok) {
-        const u = await authRes.json()
-        await loginAsStaff(u)
-        return
-      }
+      // IMPORTANTE: no `npm run dev` (Vite) não existe serverless — o Vite
+      // responde com o index.html (status 200, content-type text/html).
+      // Só consideramos a API "disponível" se a resposta for realmente JSON.
+      const contentType = authRes.headers.get('content-type') || ''
+      const isJsonApi = contentType.includes('application/json')
 
-      if (authRes.status === 401) {
-        // API respondeu: credenciais inválidas
-        // Verifica se o email é de staff (admin/dono) para dar erro correto
-        const isStaffEmail = STAFF_USERS.some(u => u.email.toLowerCase() === normalEmail)
-        if (isStaffEmail) {
-          throw new Error('E-mail ou senha incorretos')
+      if (isJsonApi) {
+        apiAvailable = true // API real respondeu (mesmo que com erro)
+
+        if (authRes.ok) {
+          const u = await authRes.json()
+          await loginAsStaff(u)
+          return
         }
-        // Não é staff conhecido — continua para tentar Firebase Auth (cliente)
-      } else if (!authRes.ok) {
-        // Outro erro da API (500, etc) — tenta Firebase Auth
-        console.warn('API auth retornou:', authRes.status)
+
+        if (authRes.status === 401) {
+          // API respondeu: credenciais inválidas
+          const isStaffEmail = STAFF_USERS.some(u => u.email.toLowerCase() === normalEmail)
+          if (isStaffEmail) {
+            throw new Error('E-mail ou senha incorretos')
+          }
+          // Não é staff conhecido — continua para tentar Firebase Auth (cliente)
+        } else {
+          // Outro erro da API (500, etc) — tenta Firebase Auth
+          console.warn('API auth retornou:', authRes.status)
+        }
+      } else {
+        // Resposta não é JSON → API serverless não está rodando (dev local)
+        apiAvailable = false
       }
     } catch (e: any) {
       if (e.message === 'E-mail ou senha incorretos') throw e

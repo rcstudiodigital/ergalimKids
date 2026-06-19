@@ -50,6 +50,7 @@ const OwnerPromotions  = lazy(() => import('@/pages/owner/OwnerPromotions'))
 const OwnerShipping    = lazy(() => import('@/pages/owner/OwnerShipping'))
 const OwnerPayment     = lazy(() => import('@/pages/owner/OwnerPayment'))
 const OwnerFreight     = lazy(() => import('@/pages/owner/OwnerFreight'))
+const OwnerCarousel    = lazy(() => import('@/pages/owner/OwnerCarousel'))
 
 const Loading = () => (
   <div className="min-h-screen flex items-center justify-center bg-bg-page">
@@ -134,6 +135,7 @@ export default function App() {
                     <Route path="shipping"     element={<OwnerShipping/>}/>
                     <Route path="payment"      element={<OwnerPayment/>}/>
                     <Route path="freight"      element={<OwnerFreight/>}/>
+                    <Route path="carousel"     element={<OwnerCarousel/>}/>
                   </Route>
                 </Routes>
               </Suspense>
