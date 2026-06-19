@@ -28,16 +28,16 @@ function HomeCarousel() {
   return (
     <section className="relative w-full bg-bg-soft">
       <div className="relative max-w-7xl mx-auto">
-        <div className="relative aspect-[21/9] sm:aspect-[3/1] overflow-hidden sm:rounded-b-4xl">
+        <div className="relative h-[60vh] max-h-[460px] sm:h-auto sm:aspect-[3/1] sm:max-h-none overflow-hidden sm:rounded-b-4xl">
           {slides.map((slide, i) => (
             <div key={slide.id}
               className={`absolute inset-0 transition-opacity duration-700 ${i === current ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
               <img src={slide.imageUrl} alt={slide.title || ''} className="w-full h-full object-cover"/>
               {(slide.title || slide.subtitle || slide.buttonText) && (
                 <>
-                  <div className="absolute inset-0 bg-gradient-to-r from-brand-ink/55 via-brand-ink/20 to-transparent"/>
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="px-6 sm:px-12 max-w-lg">
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/70 via-brand-ink/25 to-brand-ink/10 sm:bg-gradient-to-r sm:from-brand-ink/55 sm:via-brand-ink/20 sm:to-transparent"/>
+                  <div className="absolute inset-0 flex items-end sm:items-center">
+                    <div className="px-5 pb-8 sm:px-12 sm:pb-0 max-w-lg">
                       {slide.title && (
                         <h2 className="font-display font-extrabold text-white text-2xl sm:text-4xl leading-tight mb-2 drop-shadow">
                           {slide.title}
