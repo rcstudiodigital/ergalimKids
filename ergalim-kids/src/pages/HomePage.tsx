@@ -153,6 +153,58 @@ const CATS = [
   { name: 'Novidades', key: 'novidades', href: '/shop?new=true',           img: 'https://images.unsplash.com/photo-1519238263530-99bdd11df2ea?w=400&q=80' },
 ]
 
+// ── Vitrine com filtros (abaixo do carrossel) ───────────────────────────────
+const FILTERS = [
+  { label: 'Todos',     value: 'all' },
+  { label: 'Meninos',   value: 'Masculino' },
+  { label: 'Meninas',   value: 'Feminino' },
+  { label: 'Conjuntos', value: 'Unissex' },
+]
+
+function ProductShowcase() {
+  const { products } = useStore()
+  const [filter, setFilter] = useState('all')
+
+  const active = products.filter(p => p.active)
+  const shown = filter === 'all' ? active : active.filter(p => p.category === filter)
+
+  if (active.length === 0) return null
+
+  return (
+    <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto">
+      <div className="text-center mb-8">
+        <span className="eyebrow">Nossa loja</span>
+        <h2 className="section-title text-2xl md:text-3xl mt-1">Todos os produtos</h2>
+      </div>
+
+      {/* Filtros */}
+      <div className="flex flex-wrap justify-center gap-2 mb-8">
+        {FILTERS.map(f => (
+          <button key={f.value} onClick={() => setFilter(f.value)}
+            className={`px-5 py-2.5 rounded-full text-sm font-bold transition-all ${
+              filter === f.value
+                ? 'bg-brand-pink text-white shadow-soft'
+                : 'bg-white text-brand-navy border border-line hover:border-brand-pink'
+            }`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Grade de produtos */}
+      {shown.length > 0 ? (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {shown.map(p => <ProductCard key={p.id} product={p}/>)}
+        </div>
+      ) : (
+        <p className="text-center text-gray-400 font-medium py-10">
+          Nenhum produto nesta categoria ainda.
+        </p>
+      )}
+    </section>
+  )
+}
+
 export default function HomePage() {
   const { products, settings } = useStore()
   const { homeSections, categoryImages } = settings
@@ -170,6 +222,9 @@ export default function HomePage() {
 
       {/* ── CARROSSEL ──────────────────────────────────────────────────── */}
       <HomeCarousel/>
+
+      {/* ── VITRINE COM FILTROS (todos os produtos) ────────────────────── */}
+      <ProductShowcase/>
 
       {/* ── CATEGORIAS ─────────────────────────────────────────────────── */}
       {isVisible('categories') && (

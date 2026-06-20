@@ -30,7 +30,7 @@ interface StoreContextType {
   addProduct:         (p: Omit<Product,'id'|'createdAt'|'updatedAt'>) => Promise<void>
   updateProduct:      (p: Product) => Promise<void>
   deleteProduct:      (id: string) => Promise<void>
-  addOrder:           (o: Omit<Order,'id'|'createdAt'|'updatedAt'>) => string
+  addOrder:           (o: Omit<Order,'id'|'createdAt'|'updatedAt'> & { id?: string }) => Promise<string>
   updateOrder:        (id: string, patch: Partial<Order>) => Promise<void>
   updateSettings:     (patch: Partial<SiteSettings>) => Promise<void>
   updateOwnerPermissions: (p: OwnerPermissions) => void
@@ -161,14 +161,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   // ── Pedidos ────────────────────────────────────────────────────────────
-  const addOrder = useCallback((o: Omit<Order,'id'|'createdAt'|'updatedAt'>): string => {
-    const id  = `EK-${Date.now().toString().slice(-6)}`
+  const addOrder = useCallback(async (o: Omit<Order,'id'|'createdAt'|'updatedAt'> & { id?: string }): Promise<string> => {
+    const id  = o.id || `EK-${Date.now().toString().slice(-6)}`
     const now = new Date().toISOString()
     if (FIREBASE_ENABLED) {
-      import('@/services/firestore').then(fb => fb.fbAddOrder({ ...o, id, createdAt: now, updatedAt: now }))
-      // O watch acima já vai atualizar o estado automaticamente
+      // Aguarda a escrita no Firebase concluir (importante antes de redirecionar pro pagamento)
+      const fb = await import('@/services/firestore')
+      await fb.fbAddOrder({ ...o, id, createdAt: now, updatedAt: now })
+      // Adiciona localmente também (o watch confirma depois)
+      setOrders(prev => prev.some(x => x.id === id) ? prev : [{ ...o, id, createdAt: now, updatedAt: now } as Order, ...prev])
     } else {
-      setOrders(prev => [{ ...o, id, createdAt: now, updatedAt: now }, ...prev])
+      setOrders(prev => [{ ...o, id, createdAt: now, updatedAt: now } as Order, ...prev])
     }
     return id
   }, [])

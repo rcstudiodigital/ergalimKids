@@ -105,8 +105,9 @@ export default function CheckoutPage() {
     const oid = `EK-${Date.now().toString().slice(-6)}`
     setOrderId(oid)
     try {
-      // 1. SALVA O PEDIDO no banco (sempre, independente da forma de pagamento)
-      addOrder({
+      // 1. SALVA O PEDIDO no banco e AGUARDA confirmar (antes de redirecionar pro pagamento)
+      await addOrder({
+        id: oid,
         customerId: user.id,
         customerName: address.name,
         customerEmail: user.email,
@@ -153,7 +154,8 @@ export default function CheckoutPage() {
       const mpEnabled = mpConfig?.enabled && mpConfig?.publicKey?.startsWith('APP_USR')
 
       if (mpEnabled && (payMethod === 'pix' || payMethod === 'card')) {
-        // Mercado Pago configurado → usa o gateway
+        // Mercado Pago configurado → redireciona para o checkout do MP
+        // (lá o cliente paga com cartão, Pix ou boleto, como preferir)
         try {
           const payResult = await createMercadoPagoPreference({
             orderId: oid,
@@ -164,13 +166,23 @@ export default function CheckoutPage() {
             pendingUrl: `${window.location.origin}/order-success?id=${oid}&status=pending`,
           }, payMethod)
 
-          if (payResult.success && payMethod === 'pix' && payResult.pixCode) {
-            setPaidAmount(finalTotal); setPixCode(payResult.pixCode); setPixQR(payResult.pixQR || ''); clearCart(); return
+          // O MP retorna o init_point — redireciona o cliente pra lá
+          if (payResult.success && payResult.initPoint) {
+            clearCart()
+            window.location.href = payResult.initPoint
+            return
           }
-          if (payResult.success && payMethod === 'card' && payResult.initPoint) {
-            clearCart(); window.location.href = payResult.initPoint; return
+          // Se não veio init_point, mostra erro (não cai no PIX manual)
+          if (!payResult.success) {
+            toast.error('Erro ao iniciar o pagamento. Tente novamente.')
+            setLoading(false)
+            return
           }
-        } catch { /* cai no fluxo manual abaixo */ }
+        } catch {
+          toast.error('Erro ao conectar com o Mercado Pago. Tente novamente.')
+          setLoading(false)
+          return
+        }
       }
 
       // 4. PIX manual configurado pelo Gabriel → mostra a chave PIX
