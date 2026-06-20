@@ -22,7 +22,6 @@ export default function CartPage() {
   }
 
   const handleCheckout = () => {
-    if (!user) { navigate('/login?redirect=/checkout'); return }
     navigate('/checkout')
   }
 

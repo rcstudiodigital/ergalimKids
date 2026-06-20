@@ -226,34 +226,6 @@ export default function HomePage() {
       {/* ── VITRINE COM FILTROS (todos os produtos) ────────────────────── */}
       <ProductShowcase/>
 
-      {/* ── CATEGORIAS ─────────────────────────────────────────────────── */}
-      {isVisible('categories') && (
-        <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto">
-          <div className="mb-8">
-            <span className="eyebrow">Categorias</span>
-            <h2 className="section-title text-2xl md:text-3xl mt-1">Escolha pelo estilo</h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {CATS.map((cat, i) => (
-              <Link key={cat.name} to={cat.href}
-                className="group relative aspect-[4/5] rounded-2xl overflow-hidden shadow-soft hover:shadow-card-lg transition-all duration-300 animate-fadeUp"
-                style={{animationDelay:`${i*0.08}s`}}>
-                <img src={categoryImages?.[cat.key as keyof typeof categoryImages] || cat.img} alt={cat.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-ink/70 via-transparent to-transparent"/>
-                <div className="absolute inset-0 flex flex-col items-start justify-end p-4">
-                  <p className="text-white font-display font-extrabold text-lg drop-shadow">{cat.name}</p>
-                  <div className="mt-1 text-white/90 text-xs font-semibold flex items-center gap-1">
-                    Ver tudo <ArrowRight size={11} className="group-hover:translate-x-0.5 transition-transform"/>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* ── DESTAQUES ──────────────────────────────────────────────────── */}
       {isVisible('featured') && featured.length > 0 && (
         <section className="py-8 px-4 sm:px-6 max-w-7xl mx-auto">

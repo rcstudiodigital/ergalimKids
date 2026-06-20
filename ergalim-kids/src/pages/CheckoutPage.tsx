@@ -45,7 +45,7 @@ export default function CheckoutPage() {
 
   const defaultAddress = addresses?.find(a => a.isDefault)
   const [address, setAddress] = useState({
-    name: user?.name || '', phone: '',
+    name: user?.name || '', phone: '', email: user?.email || '',
     street: '', number: '', complement: '',
     neighborhood: '', city: '', state: '', zipCode: '',
   })
@@ -84,8 +84,8 @@ export default function CheckoutPage() {
   const { cepLoading, cepError, handleCepChange } = useCep(address, setAddress)
   const { melhorEnvioOptions, calculating: calcShipping, calcularFrete } = useShippingCalc()
 
-  if (!user)            return <Navigate to="/login?redirect=/checkout" replace/>
-  // Só redireciona se carrinho vazio E não estamos numa tela de pagamento pós-pedido
+  // Compra como convidado é permitida — sem exigir login.
+  // Só redireciona se o carrinho estiver vazio (e não numa tela de pós-pagamento).
   if (items.length===0 && !showManualPix && !pixCode && !orderId) return <Navigate to="/cart" replace/>
 
   // Combina métodos manuais com opções do Melhor Envio (se disponíveis)
@@ -108,9 +108,9 @@ export default function CheckoutPage() {
       // 1. SALVA O PEDIDO no banco e AGUARDA confirmar (antes de redirecionar pro pagamento)
       await addOrder({
         id: oid,
-        customerId: user.id,
+        customerId: user?.id || `guest-${Date.now()}`,
         customerName: address.name,
-        customerEmail: user.email,
+        customerEmail: address.email || user?.email || '',
         customerPhone: address.phone,
         items: items.map(i => ({
           productId: i.product.id,
@@ -136,13 +136,13 @@ export default function CheckoutPage() {
       // 2. E-mails automáticos (cliente + dono)
       Promise.all([
         sendOrderConfirmationToCustomer({
-          id: oid, customerName: address.name, customerEmail: user.email,
+          id: oid, customerName: address.name, customerEmail: address.email || user?.email || '',
           items: items.map(i => ({ productName: i.product.name, quantity: i.quantity, size: i.selectedSize, color: i.selectedColor, price: i.product.price })),
           subtotal, shipping: shippingCost, discount, total: finalTotal, paymentMethod: payMethod,
           shippingAddress: { street: address.street, number: address.number, city: address.city, state: address.state, zipCode: address.zipCode },
         }),
         sendNewOrderToOwner({
-          id: oid, customerName: address.name, customerEmail: user.email,
+          id: oid, customerName: address.name, customerEmail: address.email || user?.email || '',
           customerPhone: address.phone, total: finalTotal,
           items: items.map(i => ({ productName: i.product.name, quantity: i.quantity, size: i.selectedSize })),
           paymentMethod: payMethod,
@@ -160,7 +160,7 @@ export default function CheckoutPage() {
           const payResult = await createMercadoPagoPreference({
             orderId: oid,
             items: items.map(i => ({ id: i.product.id, title: `${i.product.name} (${i.selectedSize} · ${i.selectedColor})`, quantity: i.quantity, price: i.product.price })),
-            total: finalTotal, customerEmail: user.email, customerName: address.name,
+            total: finalTotal, customerEmail: address.email || user?.email || '', customerName: address.name,
             successUrl: `${window.location.origin}/order-success?id=${oid}`,
             failureUrl: `${window.location.origin}/checkout?error=payment_failed`,
             pendingUrl: `${window.location.origin}/order-success?id=${oid}&status=pending`,
@@ -226,6 +226,17 @@ export default function CheckoutPage() {
           <p className="text-sm font-bold text-gray-500 mb-6">
             Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(paidAmount)}
           </p>
+
+          {/* QR Code (se o lojista subiu a imagem) */}
+          {pixData?.qrCodeUrl && (
+            <div className="mb-5">
+              <p className="text-xs font-black text-gray-500 mb-2">Escaneie o QR Code</p>
+              <div className="inline-block bg-white p-3 rounded-2xl border-2 border-teal-200 shadow-soft">
+                <img src={pixData.qrCodeUrl} alt="QR Code Pix" className="w-48 h-48 object-contain mx-auto"/>
+              </div>
+              <p className="text-2xs text-gray-400 mt-2">ou use a chave copia e cola abaixo</p>
+            </div>
+          )}
 
           <div className="bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-left">
             <p className="text-xs font-black text-gray-500 mb-1">Chave Pix ({keyTypeLabels[pixData?.keyType || 'cpf']})</p>
@@ -351,6 +362,17 @@ export default function CheckoutPage() {
                     onChange={e => setAddress(a => ({...a, name: e.target.value}))}
                     className="input-field" placeholder="Nome do destinatário"/>
                 </div>
+
+                {/* E-mail (para receber a confirmação do pedido) */}
+                {!user && (
+                  <div className="sm:col-span-2">
+                    <label className="text-xs font-black text-gray-500 block mb-1">E-mail *</label>
+                    <input required value={address.email} type="email"
+                      onChange={e => setAddress(a => ({...a, email: e.target.value}))}
+                      className="input-field" placeholder="seu@email.com"/>
+                    <p className="text-2xs text-gray-400 mt-1">Enviaremos a confirmação do pedido para este e-mail.</p>
+                  </div>
+                )}
 
                 {/* Telefone */}
                 <div>

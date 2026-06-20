@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CreditCard, Save, ExternalLink, Banknote, MessageCircle, Smartphone, Info } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
+import ImageUpload from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
 
 export default function OwnerPayment() {
@@ -10,7 +11,7 @@ export default function OwnerPayment() {
   const pm = settings.paymentMethods || {}
   const [methods, setMethods] = useState({
     whatsapp:    { enabled: pm.whatsapp?.enabled    ?? true },
-    pix:         { enabled: pm.pix?.enabled         ?? false, key: pm.pix?.key || '', keyType: pm.pix?.keyType || 'cpf', holderName: pm.pix?.holderName || '' },
+    pix:         { enabled: pm.pix?.enabled         ?? false, key: pm.pix?.key || '', keyType: pm.pix?.keyType || 'cpf', holderName: pm.pix?.holderName || '', qrCodeUrl: pm.pix?.qrCodeUrl || '' },
     mercadopago: { enabled: pm.mercadopago?.enabled ?? false, publicKey: pm.mercadopago?.publicKey || '' },
   })
 
@@ -34,7 +35,7 @@ export default function OwnerPayment() {
           <div className="space-y-3 pt-3 border-t border-gray-100"> <div className="grid grid-cols-2 gap-3"> <div> <label className="text-xs font-black text-gray-500 block mb-1">Tipo de chave</label> <select value={methods.pix.keyType} onChange={e => setMethods(m => ({...m, pix:{...m.pix, keyType: e.target.value}}))}
                   className="input-field text-sm py-2"> <option value="cpf">CPF</option> <option value="cnpj">CNPJ</option> <option value="email">E-mail</option> <option value="phone">Telefone</option> <option value="random">Chave aleatória</option> </select> </div> <div> <label className="text-xs font-black text-gray-500 block mb-1">Sua chave PIX</label> <input value={methods.pix.key} onChange={e => setMethods(m => ({...m, pix:{...m.pix, key: e.target.value}}))}
                   className="input-field text-sm py-2" placeholder="Digite sua chave PIX"/> </div> </div> <div> <label className="text-xs font-black text-gray-500 block mb-1">Nome do titular</label> <input value={methods.pix.holderName} onChange={e => setMethods(m => ({...m, pix:{...m.pix, holderName: e.target.value}}))}
-                className="input-field text-sm py-2" placeholder="Nome que aparece no PIX"/> </div> </div> )}
+                className="input-field text-sm py-2" placeholder="Nome que aparece no PIX"/> </div> <div> <label className="text-xs font-black text-gray-500 block mb-1">QR Code do PIX (opcional)</label> <p className="text-2xs text-gray-400 mb-2">Suba a imagem do seu QR Code para o cliente escanear direto.</p> <ImageUpload value={methods.pix.qrCodeUrl} onChange={url => setMethods(m => ({...m, pix:{...m.pix, qrCodeUrl: url}}))}/> </div> </div> )}
       </div> {/* Mercado Pago */}
       <div className={`card p-5 border-2 ${methods.mercadopago.enabled ? 'border-blue-300' : 'border-gray-200'}`}> <div className="flex items-center justify-between gap-3 mb-3"> <div className="flex items-center gap-3"> <div className="w-11 h-11 rounded-2xl bg-blue-100 flex items-center justify-center"> <Smartphone size={20} className="text-blue-600"/> </div> <div> <p className="font-black text-brand-navy">Mercado Pago</p> <p className="text-xs text-gray-500">Cartão, PIX e boleto automáticos. Taxa ~4,99% por venda.</p> </div> </div> <button onClick={() => setMethods(m => ({...m, mercadopago: {...m.mercadopago, enabled: !m.mercadopago.enabled}}))}
             className={`relative w-12 h-6 rounded-full transition-colors shrink-0 ${methods.mercadopago.enabled ? 'bg-blue-500' : 'bg-gray-300'}`}> <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${methods.mercadopago.enabled ? 'left-6' : 'left-0.5'}`}/> </button> </div> {/* Guia de configuração */}

@@ -111,7 +111,7 @@ export interface SiteSettings {
     mercadopago?: { enabled: boolean; publicKey: string }
     stripe?:      { enabled: boolean; publicKey: string }
     pagarme?:     { enabled: boolean; publicKey: string }
-    pix?:         { enabled: boolean; key: string; keyType: string; holderName: string }
+    pix?:         { enabled: boolean; key: string; keyType: string; holderName: string; qrCodeUrl?: string }
     whatsapp?:    { enabled: boolean }  // finalizar pedido via WhatsApp
   }
   // ── E-mails ────────────────────────────────────────────────────────────
