@@ -126,6 +126,18 @@ export interface SiteSettings {
   theme: SiteTheme
 }
 
+// ─── FEEDBACK DO CLIENTE ──────────────────────────────────────────────────
+export interface Feedback {
+  id: string
+  orderId?: string         // pedido relacionado (se veio do email pós-compra)
+  customerName: string
+  customerEmail: string
+  rating: number           // nota de 1 a 5
+  comment: string          // comentário do cliente
+  createdAt: string
+  read?: boolean           // se o admin já visualizou
+}
+
 export interface OwnerPermissions {
   canManageProducts: boolean; canManagePromotions: boolean; canViewOrders: boolean
   canUpdateOrderStatus: boolean; canViewFinancial: boolean

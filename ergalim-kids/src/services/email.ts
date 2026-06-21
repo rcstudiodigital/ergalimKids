@@ -134,7 +134,11 @@ export async function sendOrderConfirmationToCustomer(order: {
       <p style="margin:0;font-size:14px;">${order.shippingAddress.street}, ${order.shippingAddress.number} · ${order.shippingAddress.city}/${order.shippingAddress.state} · CEP ${order.shippingAddress.zipCode}</p>
     </div>
     <p style="font-size:13px;color:#888">Prazo de entrega: conforme opção escolhida. Você receberá outro e-mail quando o pedido for enviado.</p>
-    <a href="https://wa.me/5521992110726" class="btn">Falar no WhatsApp</a>`)
+    <a href="https://wa.me/5521992110726" class="btn">Falar no WhatsApp</a>
+    <div class="divider"></div>
+    <p style="text-align:center;font-size:14px;"><strong>Conta pra gente o que achou! ⭐</strong></p>
+    <p style="text-align:center;font-size:13px;color:#888;margin-top:4px">Sua opinião nos ajuda a melhorar. Leva só um minutinho.</p>
+    <a href="https://ergalimkids.com/feedback?order=${order.id}&name=${encodeURIComponent(order.customerName)}&email=${encodeURIComponent(order.customerEmail)}" class="btn" style="background:#FFC24B;color:#1C2444;">Avaliar minha experiência</a>`)
 
   return sendEmail({ to: order.customerEmail, subject: `Pedido ${order.id} confirmado — Ergalim Kids 🌟`, html })
 }
@@ -167,6 +171,30 @@ export async function sendNewOrderToOwner(order: {
     <a href="https://ergalimkids.vercel.app/owner/orders" class="btn">Ver no painel da loja</a>`)
 
   return sendEmail({ to: STORE_EMAIL, subject: `🆕 Novo pedido ${order.id} — R$ ${order.total.toFixed(2).replace('.', ',')}`, html })
+}
+
+// 2b. Feedback do cliente → para o DONO DA LOJA
+export async function sendFeedbackToOwner(data: {
+  customerName: string
+  customerEmail: string
+  rating: number
+  comment: string
+  orderId?: string
+}): Promise<boolean> {
+  const stars = '★'.repeat(data.rating) + '☆'.repeat(5 - data.rating)
+  const html = baseTemplate(`
+    <h1>Novo feedback recebido! ⭐</h1>
+    <p>Um cliente avaliou a experiência na loja.</p>
+    <div class="box">
+      <div class="box-row"><span>Cliente</span><span><strong>${data.customerName}</strong></span></div>
+      ${data.customerEmail ? `<div class="box-row"><span>E-mail</span><span>${data.customerEmail}</span></div>` : ''}
+      ${data.orderId ? `<div class="box-row"><span>Pedido</span><span>${data.orderId}</span></div>` : ''}
+      <div class="box-row"><span>Nota</span><span style="color:#FFC24B;font-size:18px;">${stars} (${data.rating}/5)</span></div>
+    </div>
+    ${data.comment ? `<p><strong>Comentário:</strong></p><div class="box"><p style="margin:0;font-size:14px;font-style:italic;">"${data.comment}"</p></div>` : '<p style="color:#888;font-size:13px;">(Sem comentário)</p>'}
+    <a href="https://ergalimkids.com/admin/feedbacks" class="btn">Ver todos os feedbacks</a>`)
+
+  return sendEmail({ to: STORE_EMAIL, subject: `⭐ Novo feedback (${data.rating}/5) de ${data.customerName}`, html })
 }
 
 // 3. Pedido enviado → para o CLIENTE

@@ -14,7 +14,7 @@ import {
   serverTimestamp, Unsubscribe
 } from 'firebase/firestore'
 import { db, ensureAuth } from '@/lib/firebase'
-import type { Product, Order, SiteSettings, Coupon, CustomerProfile } from '@/types'
+import type { Product, Order, SiteSettings, Coupon, CustomerProfile, Feedback } from '@/types'
 
 /**
  * Remove campos undefined de um objeto (o Firestore rejeita undefined).
@@ -178,4 +178,24 @@ export async function fbGetAllCustomers(): Promise<{ email: string; name: string
     .map(d => d.data())
     .filter(c => c.email)
     .map(c => ({ email: c.email as string, name: (c.name as string) || 'Cliente' }))
+}
+
+// ── FEEDBACK DO CLIENTE ──────────────────────────────────────────────────────
+export const feedbacksRef = () => collection(db, 'feedbacks')
+
+export async function fbAddFeedback(f: Omit<Feedback, 'id'>): Promise<string> {
+  await ensureAuth()
+  const ref = await addDoc(collection(db, 'feedbacks'), clean({ ...f, createdAt: serverTimestamp() }))
+  return ref.id
+}
+
+export function fbWatchFeedbacks(cb: (list: Feedback[]) => void): Unsubscribe {
+  return onSnapshot(query(collection(db, 'feedbacks'), orderBy('createdAt', 'desc')), snap => {
+    cb(snap.docs.map(d => ({ id: d.id, ...d.data() } as Feedback)))
+  })
+}
+
+export async function fbMarkFeedbackRead(id: string) {
+  await ensureAuth()
+  await updateDoc(doc(db, 'feedbacks', id), { read: true })
 }

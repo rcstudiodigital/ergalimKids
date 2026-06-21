@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Package, ShoppingBag, Users,
   BarChart2, Palette, Shield, CreditCard,
   Menu, X, LogOut, ChevronRight, Settings, Truck,
-  Megaphone, Mail
+  Megaphone, Mail, MessageSquare
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
@@ -17,6 +17,7 @@ const MENU = [
   { label: 'Clientes',     href: '/admin/customers',    icon: Users,           desc: 'Cadastros e histórico' },
   { label: 'E-mail Marketing', href: '/admin/marketing', icon: Megaphone,    desc: 'Promoções e novidades' },
   { label: 'Mensagens E-mail',  href: '/admin/email-messages', icon: Mail,     desc: 'Textos dos e-mails automáticos' },
+  { label: 'Feedbacks',    href: '/admin/feedbacks',    icon: MessageSquare,   desc: 'Avaliações dos clientes' },
   { label: 'Financeiro',   href: '/admin/financial',    icon: BarChart2,       desc: 'Receitas e relatórios' },
   // ── Site
   { label: 'Personalizar', href: '/admin/customize',    icon: Palette,         desc: 'Cores, textos, home' },

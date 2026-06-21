@@ -12,6 +12,7 @@ import OwnerLayout from '@/components/layout/OwnerLayout'
 
 // ── Loja pública ──────────────────────────────────────────────────────────
 const HomePage         = lazy(() => import('@/pages/HomePage'))
+const FeedbackPage     = lazy(() => import('@/pages/FeedbackPage'))
 const ShopPage         = lazy(() => import('@/pages/ShopPage'))
 const ProductPage      = lazy(() => import('@/pages/ProductPage'))
 const CartPage         = lazy(() => import('@/pages/CartPage'))
@@ -40,6 +41,7 @@ const AdminPermissions = lazy(() => import('@/pages/admin/AdminPermissions'))
 const AdminPayment     = lazy(() => import('@/pages/admin/AdminPayment'))
 const AdminMarketing   = lazy(() => import('@/pages/admin/AdminMarketing'))
 const AdminEmailMessages = lazy(() => import('@/pages/admin/AdminEmailMessages'))
+const AdminFeedbacks   = lazy(() => import('@/pages/admin/AdminFeedbacks'))
 
 // ── Dono ──────────────────────────────────────────────────────────────────
 const OwnerDashboard   = lazy(() => import('@/pages/owner/OwnerDashboard'))
@@ -97,6 +99,7 @@ export default function App() {
                     <Route path="shop"        element={<ShopPage/>}/>
                     <Route path="product/:id" element={<ProductPage/>}/>
                     <Route path="cart"        element={<CartPage/>}/>
+                    <Route path="feedback"    element={<FeedbackPage/>}/>
                     <Route path="checkout"    element={<CheckoutPage/>}/>
                     <Route path="order-success" element={<OrderSuccessPage/>}/>
                     {/* Conta do cliente */}
@@ -123,6 +126,7 @@ export default function App() {
                     <Route path="payment"      element={<AdminPayment/>}/>
                     <Route path="marketing"    element={<AdminMarketing/>}/>
                     <Route path="email-messages" element={<AdminEmailMessages/>}/>
+                    <Route path="feedbacks"    element={<AdminFeedbacks/>}/>
                   </Route>
 
                   {/* ── DONO ─────────────────────────────────────── */}
