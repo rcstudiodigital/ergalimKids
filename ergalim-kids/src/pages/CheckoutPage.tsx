@@ -196,9 +196,11 @@ export default function CheckoutPage() {
       // 5. Sem gateway → finaliza direto (pagamento combinado via WhatsApp)
       clearCart()
       navigate(`/order-success?id=${oid}`)
-    } catch (e) {
+    } catch (e: any) {
       console.error('Erro ao finalizar pedido:', e)
-      toast.error('Erro ao finalizar pedido. Tente novamente.')
+      // Mostra o erro REAL na tela para diagnóstico
+      const msg = e?.code || e?.message || String(e)
+      toast.error(`Erro ao salvar pedido: ${msg}`, { duration: 8000 })
     }
     finally { setLoading(false) }
   }
