@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { CreditCard, Save, Check, Smartphone, MessageCircle, Banknote, ExternalLink } from 'lucide-react'
 import { useStore } from '@/context/StoreContext'
+import ImageUpload from '@/components/ui/ImageUpload'
 import toast from 'react-hot-toast'
 
 export default function AdminPayment() {
@@ -10,7 +11,7 @@ export default function AdminPayment() {
   const pm = settings.paymentMethods || {}
   const [methods, setMethods] = useState({
     mercadopago: { enabled: pm.mercadopago?.enabled ?? false, publicKey: pm.mercadopago?.publicKey || settings.mercadopagoPublicKey || '' },
-    pix:         { enabled: pm.pix?.enabled ?? false, key: pm.pix?.key || '', keyType: pm.pix?.keyType || 'cpf', holderName: pm.pix?.holderName || '' },
+    pix:         { enabled: pm.pix?.enabled ?? false, key: pm.pix?.key || '', keyType: pm.pix?.keyType || 'cpf', holderName: pm.pix?.holderName || '', qrCodeUrl: pm.pix?.qrCodeUrl || '' },
     whatsapp:    { enabled: pm.whatsapp?.enabled ?? true },
     stripe:      { enabled: pm.stripe?.enabled ?? false, publicKey: pm.stripe?.publicKey || settings.stripePublicKey || '' },
     pagarme:     { enabled: pm.pagarme?.enabled ?? false, publicKey: pm.pagarme?.publicKey || '' },
@@ -43,7 +44,7 @@ export default function AdminPayment() {
           <div className="space-y-3 pt-3 border-t border-gray-700"> <div className="grid sm:grid-cols-2 gap-3"> <div> <label className="text-xs font-black text-gray-400 block mb-1">Tipo de chave</label> <select value={methods.pix.keyType} onChange={e=>setMethods(m=>({...m, pix:{...m.pix, keyType:e.target.value}}))}
                   className="input-field bg-gray-800 border-gray-700 text-white"> <option value="cpf">CPF</option> <option value="cnpj">CNPJ</option> <option value="email">E-mail</option> <option value="phone">Telefone</option> <option value="random">Chave aleatória</option> </select> </div> <div> <label className="text-xs font-black text-gray-400 block mb-1">Chave PIX</label> <input value={methods.pix.key} onChange={e=>setMethods(m=>({...m, pix:{...m.pix, key:e.target.value}}))}
                   className="input-field bg-gray-800 border-gray-700 text-white" placeholder="Sua chave PIX"/> </div> </div> <div> <label className="text-xs font-black text-gray-400 block mb-1">Nome do titular</label> <input value={methods.pix.holderName} onChange={e=>setMethods(m=>({...m, pix:{...m.pix, holderName:e.target.value}}))}
-                className="input-field bg-gray-800 border-gray-700 text-white" placeholder="Nome que aparece no PIX"/> </div> </div> )}
+                className="input-field bg-gray-800 border-gray-700 text-white" placeholder="Nome que aparece no PIX"/> </div> <div> <label className="text-xs font-black text-gray-400 block mb-1">QR Code do PIX (opcional)</label> <p className="text-2xs text-gray-500 mb-2">Suba a imagem do seu QR Code para o cliente escanear direto.</p> <ImageUpload value={methods.pix.qrCodeUrl} onChange={url => setMethods(m => ({...m, pix:{...m.pix, qrCodeUrl: url}}))}/> </div> </div> )}
       </PaymentCard> {/* Mercado Pago */}
       <PaymentCard
         icon={<Smartphone size={20} className="text-blue-400"/>}

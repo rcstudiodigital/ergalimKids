@@ -63,9 +63,16 @@ export default async function handler(req, res) {
       })
     }
 
-    // Formatar para o padrão da loja — aceita qualquer opção com preço válido
+    // Formatar para o padrão da loja — SÓ Jadlog e SEDEX
+    const PERMITIDAS = ['jadlog', 'sedex']
     const options = (Array.isArray(data) ? data : [])
       .filter((s) => !s.error && s.price && parseFloat(s.price) > 0)
+      .filter((s) => {
+        const nome = (s.name || '').toLowerCase()
+        const empresa = (s.company?.name || '').toLowerCase()
+        // Mantém se o nome do serviço OU a transportadora for Jadlog ou SEDEX
+        return PERMITIDAS.some(p => nome.includes(p) || empresa.includes(p))
+      })
       .map((s) => ({
         id: `me_${s.id}`,
         name: s.name,                                    // ex: "PAC", "SEDEX"
