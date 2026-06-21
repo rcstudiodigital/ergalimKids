@@ -27,14 +27,14 @@ function toValidDate(input: any): Date | null {
 export const formatDate = (iso: any): string => {
   const d = toValidDate(iso)
   if (!d) return '—'
-  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d)
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'America/Sao_Paulo' }).format(d)
 }
 
 export const formatDateFull = (iso: any): string => {
   const d = toValidDate(iso)
   if (!d) return '—'
   return new Intl.DateTimeFormat('pt-BR', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo'
   }).format(d)
 }
 

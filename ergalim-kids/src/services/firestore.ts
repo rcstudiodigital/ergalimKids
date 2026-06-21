@@ -184,7 +184,9 @@ export async function fbGetAllCustomers(): Promise<{ email: string; name: string
 export const feedbacksRef = () => collection(db, 'feedbacks')
 
 export async function fbAddFeedback(f: Omit<Feedback, 'id'>): Promise<string> {
-  await ensureAuth()
+  // Não exige ensureAuth — a regra do Firestore permite create público para feedbacks.
+  // Tenta autenticar (se já estiver logado usa a sessão), mas não bloqueia se falhar.
+  try { await ensureAuth() } catch { /* convidado pode enviar feedback mesmo assim */ }
   const ref = await addDoc(collection(db, 'feedbacks'), clean({ ...f, createdAt: serverTimestamp() }))
   return ref.id
 }

@@ -30,11 +30,12 @@ export default function FeedbackPage() {
         orderId, customerName: name.trim(), customerEmail: email.trim(),
         rating, comment: comment.trim(), createdAt: new Date().toISOString(), read: false,
       })
-      // Envia email pro dono (Gabriel)
+      // Envia email pro dono (Gabriel) — não bloqueia se falhar
       sendFeedbackToOwner({ customerName: name.trim(), customerEmail: email.trim(), rating, comment: comment.trim(), orderId }).catch(() => {})
       setSent(true)
-    } catch {
-      toast.error('Erro ao enviar. Tente novamente.')
+    } catch (err: any) {
+      console.error('Erro ao enviar feedback:', err?.code, err?.message)
+      toast.error('Não foi possível enviar agora. Tente novamente em instantes.')
     } finally {
       setSending(false)
     }
