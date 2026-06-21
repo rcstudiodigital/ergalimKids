@@ -75,8 +75,8 @@ export default function CheckoutPage() {
   React.useEffect(() => {
     const mpOk = settings.paymentMethods?.mercadopago?.enabled && settings.paymentMethods?.mercadopago?.publicKey?.startsWith('APP_USR')
     const pixOk = settings.paymentMethods?.pix?.enabled && settings.paymentMethods?.pix?.key
-    // Se PIX disponível, usa PIX. Senão, se só cartão, usa cartão.
-    if (mpOk || pixOk) setPayMethod('pix')
+    // PIX manual tem prioridade como padrão; senão cartão (Mercado Pago)
+    if (pixOk) setPayMethod('pix')
     else if (mpOk) setPayMethod('card')
   }, [settings.paymentMethods])
 
@@ -149,13 +149,12 @@ export default function CheckoutPage() {
         }),
       ]).catch(() => {})
 
-      // 3. Verifica se Mercado Pago está configurado
+      // 3. CARTÃO → Mercado Pago. PIX → sempre o manual (chave/QR do lojista).
       const mpConfig = settings.paymentMethods?.mercadopago
       const mpEnabled = mpConfig?.enabled && mpConfig?.publicKey?.startsWith('APP_USR')
 
-      if (mpEnabled && (payMethod === 'pix' || payMethod === 'card')) {
-        // Mercado Pago configurado → redireciona para o checkout do MP
-        // (lá o cliente paga com cartão, Pix ou boleto, como preferir)
+      if (mpEnabled && payMethod === 'card') {
+        // Só o CARTÃO vai pro checkout do Mercado Pago
         try {
           const payResult = await createMercadoPagoPreference({
             orderId: oid,
@@ -172,7 +171,6 @@ export default function CheckoutPage() {
             window.location.href = payResult.initPoint
             return
           }
-          // Se não veio init_point, mostra erro (não cai no PIX manual)
           if (!payResult.success) {
             toast.error('Erro ao iniciar o pagamento. Tente novamente.')
             setLoading(false)
@@ -185,7 +183,7 @@ export default function CheckoutPage() {
         }
       }
 
-      // 4. PIX manual configurado pelo Gabriel → mostra a chave PIX
+      // 4. PIX → sempre mostra o PIX manual (chave/QR configurado no painel)
       const pixManual = settings.paymentMethods?.pix
       if (payMethod === 'pix' && pixManual?.enabled && pixManual?.key) {
         setPaidAmount(finalTotal)  // guarda o valor ANTES de limpar o carrinho
@@ -515,11 +513,11 @@ export default function CheckoutPage() {
             const pixManualOk = settings.paymentMethods?.pix?.enabled && settings.paymentMethods?.pix?.key
             const payOptions: { key: PayMethod; icon: string; name: string; sub: string }[] = []
 
-            // PIX aparece se: Mercado Pago ativo (PIX automático) OU PIX manual configurado
-            if (mpOk || pixManualOk) {
-              payOptions.push({ key:'pix', icon:'pix', name:'Pix', sub: mpOk ? 'Aprovação imediata' : 'Chave Pix' })
+            // PIX aparece se o PIX manual (chave/QR) estiver configurado
+            if (pixManualOk) {
+              payOptions.push({ key:'pix', icon:'pix', name:'Pix', sub: 'Chave Pix / QR Code' })
             }
-            // Cartão aparece SOMENTE se o Mercado Pago estiver configurado
+            // Cartão aparece se o Mercado Pago estiver configurado
             if (mpOk) {
               payOptions.push({ key:'card', icon:'card', name:'Cartão', sub:'Crédito / Débito' })
             }
