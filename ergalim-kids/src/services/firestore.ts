@@ -77,7 +77,9 @@ export async function fbGetOrders(): Promise<Order[]> {
 }
 
 export async function fbAddOrder(o: Omit<Order, 'id'>): Promise<string> {
-  await ensureAuth()
+  // Tenta autenticar (cliente logado usa a sessão), mas não bloqueia o convidado.
+  // A regra do Firestore permite create público de pedidos.
+  try { await ensureAuth() } catch { /* convidado pode finalizar compra mesmo assim */ }
   // Usa o id e createdAt que já vêm do contexto (string ISO previsível).
   // Não usa serverTimestamp para evitar datas nulas durante o snapshot.
   const id = (o as any).id || `EK-${Date.now().toString().slice(-6)}`

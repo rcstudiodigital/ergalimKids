@@ -17,9 +17,12 @@ service cloud.firestore {
     // com Firebase Admin SDK (auth.uid != customerId no modelo atual).
     // Fica como melhoria futura — hoje liberar a leitura autenticada é o que
     // mantém o painel e a conta do cliente funcionando.
+    // PEDIDOS — qualquer um pode CRIAR (cliente convidado finaliza compra sem login).
+    // Leitura e gestão (update/delete) só para staff autenticado.
+    // O webhook do Mercado Pago atualiza status/pagamento via REST sem auth.
     match /orders/{orderId} {
+      allow create: if true;
       allow read:   if request.auth != null;
-      allow create: if request.auth != null;
       allow update: if request.auth != null
                     || request.resource.data.diff(resource.data)
                          .affectedKeys().hasOnly(['status','paymentId','updatedAt']);
