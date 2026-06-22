@@ -159,7 +159,7 @@ export default function CheckoutPage() {
           const payResult = await createMercadoPagoPreference({
             orderId: oid,
             items: items.map(i => ({ id: i.product.id, title: `${i.product.name} (${i.selectedSize} · ${i.selectedColor})`, quantity: i.quantity, price: i.product.price })),
-            total: finalTotal, customerEmail: address.email || user?.email || '', customerName: address.name,
+            total: finalTotal, shippingCost, customerEmail: address.email || user?.email || '', customerName: address.name,
             successUrl: `${window.location.origin}/order-success?id=${oid}`,
             failureUrl: `${window.location.origin}/checkout?error=payment_failed`,
             pendingUrl: `${window.location.origin}/order-success?id=${oid}&status=pending`,

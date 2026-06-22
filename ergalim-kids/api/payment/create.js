@@ -2,8 +2,33 @@
  * Serverless — Cria preferência de pagamento no Mercado Pago
  * Usa o ACCESS TOKEN secreto (nunca exposto no browser)
  *
+ * SEGURANÇA: o preço de cada item é buscado no Firestore (fonte da verdade),
+ * NÃO é confiado o valor que veio do navegador. Isso impede que alguém
+ * altere o preço no DevTools antes de pagar.
+ *
  * O webhook (notification_url) faz o MP avisar quando o pagamento for aprovado.
  */
+
+const PROJECT_ID = process.env.VITE_FIREBASE_PROJECT_ID || 'ergalim-kids-novo'
+
+// Busca o preço REAL do produto no Firestore via REST (products é leitura pública)
+async function getRealProduct(productId) {
+  const url = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents/products/${productId}`
+  const res = await fetch(url)
+  if (!res.ok) return null
+  const doc = await res.json()
+  if (!doc.fields) return null
+  const price = Number(
+    doc.fields.price?.doubleValue ??
+    doc.fields.price?.integerValue ??
+    0
+  )
+  return {
+    name: doc.fields.name?.stringValue || 'Produto',
+    price,
+    active: doc.fields.active?.booleanValue !== false,
+  }
+}
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' })
@@ -14,25 +39,39 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { orderId, amount, items, method, customerEmail, customerName } = req.body
+    const { orderId, items, shippingCost, customerEmail, customerName } = req.body
     const SITE_URL = process.env.SITE_URL || 'https://ergalimkids.com'
 
-    // Monta os itens para o Mercado Pago
-    const mpItems = (items || []).map((i) => ({
-      title: i.productName || 'Produto',
-      quantity: i.quantity || 1,
-      unit_price: Number(i.price) || 0,
-      currency_id: 'BRL',
-    }))
+    // Monta os itens com PREÇO REAL do banco (ignora o preço enviado pelo cliente)
+    const mpItems = []
+    for (const i of (items || [])) {
+      const productId = i.id || i.productId
+      if (!productId) continue
 
-    // Se não tiver itens detalhados, usa o total como item único
-    if (mpItems.length === 0) {
+      const real = await getRealProduct(productId)
+      // Se o produto não existe ou está inativo, recusa
+      if (!real || !real.active) {
+        return res.status(400).json({ error: `Produto indisponível: ${i.title || productId}` })
+      }
+
+      const qty = Math.max(1, Number(i.quantity) || 1)
       mpItems.push({
-        title: `Pedido ${orderId}`,
-        quantity: 1,
-        unit_price: Number(amount) || 0,
+        title: real.name,
+        quantity: qty,
+        unit_price: real.price,   // ← preço do banco, não o do navegador
         currency_id: 'BRL',
       })
+    }
+
+    if (mpItems.length === 0) {
+      return res.status(400).json({ error: 'Nenhum item válido no pedido' })
+    }
+
+    // Frete como item separado (valor vem da cotação; idealmente revalidar, mas
+    // ao menos não está embutido no preço dos produtos)
+    const frete = Number(shippingCost) || 0
+    if (frete > 0) {
+      mpItems.push({ title: 'Frete', quantity: 1, unit_price: frete, currency_id: 'BRL' })
     }
 
     const preference = {
@@ -41,16 +80,13 @@ export default async function handler(req, res) {
         email: customerEmail || '',
         name: customerName || '',
       },
-      // external_reference = ID do pedido (o webhook usa isso para achar o pedido)
       external_reference: orderId,
-      // URLs de retorno após o pagamento
       back_urls: {
         success: `${SITE_URL}/order-success?id=${orderId}&status=approved`,
         pending: `${SITE_URL}/order-success?id=${orderId}&status=pending`,
         failure: `${SITE_URL}/order-success?id=${orderId}&status=failure`,
       },
       auto_return: 'approved',
-      // Webhook — o MP chama esta URL quando o status do pagamento muda
       notification_url: `${SITE_URL}/api/payment/webhook`,
       statement_descriptor: 'ERGALIM KIDS',
     }
@@ -73,7 +109,7 @@ export default async function handler(req, res) {
     const data = await response.json()
 
     return res.status(200).json({
-      init_point: data.init_point,           // URL do checkout do Mercado Pago
+      init_point: data.init_point,
       preference_id: data.id,
     })
   } catch (err) {

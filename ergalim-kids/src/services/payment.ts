@@ -31,6 +31,7 @@ export interface PaymentItem {
 export interface PaymentPreference {
   items:          PaymentItem[]
   total:          number
+  shippingCost?:  number
   orderId:        string
   customerEmail:  string
   customerName:   string
@@ -95,6 +96,7 @@ export async function createMercadoPagoPreference(
         orderId: pref.orderId,
         amount: pref.total,
         items: pref.items,
+        shippingCost: pref.shippingCost || 0,
         method,
         customerEmail: pref.customerEmail,
         customerName: pref.customerName,
