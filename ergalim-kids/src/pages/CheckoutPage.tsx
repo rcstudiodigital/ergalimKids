@@ -7,6 +7,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useStore } from '@/context/StoreContext'
 import { formatCurrency } from '@/utils/security'
 import { createMercadoPagoPreference } from '@/services/payment'
+import { generatePixCode } from '@/utils/pix'
+import QrCode from '@/components/ui/QrCode'
 import { sendOrderConfirmationToCustomer, sendNewOrderToOwner } from '@/services/email'
 import { useCep } from '@/hooks/useCep'
 import { useShippingCalc } from '@/hooks/useShippingCalc'
@@ -218,6 +220,22 @@ export default function CheckoutPage() {
     const keyTypeLabels: Record<string, string> = {
       cpf: 'CPF', cnpj: 'CNPJ', email: 'E-mail', phone: 'Telefone', random: 'Chave aleatória'
     }
+
+    // Gera o PIX Copia e Cola com o VALOR já embutido
+    let pixCopiaCola = ''
+    if (pixData?.key) {
+      try {
+        pixCopiaCola = generatePixCode({
+          key: pixData.key,
+          keyType: pixData.keyType || 'cpf',
+          holderName: pixData.holderName || 'Ergalim Kids',
+          city: 'Petropolis',
+          amount: paidAmount,
+          txid: orderId.replace(/[^a-zA-Z0-9]/g, '').slice(0, 25),
+        })
+      } catch { /* se falhar, cai no modo chave simples */ }
+    }
+
     return (
       <div className="max-w-md mx-auto px-4 py-10 text-center">
         <div className="card-kid p-8">
@@ -227,38 +245,62 @@ export default function CheckoutPage() {
             Pedido <strong className="text-brand-navy">{orderId}</strong> — {formatCurrency(paidAmount)}
           </p>
 
-          {/* QR Code (se o lojista subiu a imagem) */}
-          {pixData?.qrCodeUrl && (
+          {/* QR Code com valor — gerado localmente (sem site externo), ou imagem que o lojista subiu */}
+          {(pixCopiaCola || pixData?.qrCodeUrl) && (
             <div className="mb-5">
-              <p className="text-xs font-black text-gray-500 mb-2">Escaneie o QR Code</p>
+              <p className="text-xs font-black text-gray-500 mb-2">Escaneie o QR Code (valor já incluído)</p>
               <div className="inline-block bg-white p-3 rounded-2xl border-2 border-teal-200 shadow-soft">
-                <img src={pixData.qrCodeUrl} alt="QR Code Pix" className="w-48 h-48 object-contain mx-auto"/>
+                {pixCopiaCola ? (
+                  <QrCode value={pixCopiaCola} size={208}/>
+                ) : (
+                  <img src={pixData?.qrCodeUrl} alt="QR Code Pix" className="w-52 h-52 object-contain mx-auto"/>
+                )}
               </div>
-              <p className="text-2xs text-gray-400 mt-2">ou use a chave copia e cola abaixo</p>
+              <p className="text-2xs text-gray-400 mt-2">ou copie o código abaixo</p>
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-left">
-            <p className="text-xs font-black text-gray-500 mb-1">Chave Pix ({keyTypeLabels[pixData?.keyType || 'cpf']})</p>
-            <div className="flex gap-2 items-center mb-3">
-              <input readOnly value={pixData?.key || ''} className="input-field text-sm font-mono flex-1 bg-white select-all py-2"/>
-              <button onClick={() => { navigator.clipboard.writeText(pixData?.key || ''); setCopied(true); setTimeout(() => setCopied(false), 2000); toast.success('Chave Pix copiada!') }}
-                className={`btn-navy px-4 shrink-0 py-2 ${copied ? '!bg-green-600' : ''}`}>
-                {copied ? <CheckCircle size={16}/> : <Copy size={16}/>}
-              </button>
+          {/* PIX Copia e Cola com valor embutido */}
+          {pixCopiaCola ? (
+            <div className="bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-left">
+              <p className="text-xs font-black text-gray-500 mb-1">Pix Copia e Cola</p>
+              <div className="flex gap-2 items-start mb-3">
+                <textarea readOnly value={pixCopiaCola} rows={3}
+                  className="input-field text-2xs font-mono flex-1 bg-white select-all py-2 resize-none break-all"/>
+                <button onClick={() => { navigator.clipboard.writeText(pixCopiaCola); setCopied(true); setTimeout(() => setCopied(false), 2000); toast.success('Código Pix copiado!') }}
+                  className={`btn-navy px-4 shrink-0 py-2 ${copied ? '!bg-green-600' : ''}`}>
+                  {copied ? <CheckCircle size={16}/> : <Copy size={16}/>}
+                </button>
+              </div>
+              {pixData?.holderName && (
+                <p className="text-xs text-gray-600"><strong>Titular:</strong> {pixData.holderName}</p>
+              )}
+              <p className="text-lg font-black text-brand-navy mt-2">Valor: {formatCurrency(paidAmount)}</p>
             </div>
-            {pixData?.holderName && (
-              <p className="text-xs text-gray-600"><strong>Titular:</strong> {pixData.holderName}</p>
-            )}
-            <p className="text-lg font-black text-brand-navy mt-2">Valor: {formatCurrency(paidAmount)}</p>
-          </div>
+          ) : (
+            /* Fallback: chave simples (se não conseguiu gerar o código) */
+            <div className="bg-gradient-to-br from-teal-50 to-blue-50 border-2 border-teal-200 rounded-2xl p-5 mb-5 text-left">
+              <p className="text-xs font-black text-gray-500 mb-1">Chave Pix ({keyTypeLabels[pixData?.keyType || 'cpf']})</p>
+              <div className="flex gap-2 items-center mb-3">
+                <input readOnly value={pixData?.key || ''} className="input-field text-sm font-mono flex-1 bg-white select-all py-2"/>
+                <button onClick={() => { navigator.clipboard.writeText(pixData?.key || ''); setCopied(true); setTimeout(() => setCopied(false), 2000); toast.success('Chave Pix copiada!') }}
+                  className={`btn-navy px-4 shrink-0 py-2 ${copied ? '!bg-green-600' : ''}`}>
+                  {copied ? <CheckCircle size={16}/> : <Copy size={16}/>}
+                </button>
+              </div>
+              {pixData?.holderName && (
+                <p className="text-xs text-gray-600"><strong>Titular:</strong> {pixData.holderName}</p>
+              )}
+              <p className="text-lg font-black text-brand-navy mt-2">Valor: {formatCurrency(paidAmount)}</p>
+            </div>
+          )}
 
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-xs text-amber-700 text-left mb-5">
             <p className="font-black mb-1">Como pagar:</p>
             <ol className="list-decimal pl-4 space-y-0.5">
               <li>Abra o app do seu banco</li>
-              <li>Escolha pagar com Pix → Copia e Cola (ou a chave acima)</li>
-              <li>Confira o valor e confirme</li>
+              <li>Escolha pagar com Pix → Copia e Cola (ou escaneie o QR)</li>
+              <li>O valor já vem preenchido — é só confirmar</li>
               <li>Envie o comprovante pelo WhatsApp</li>
             </ol>
           </div>
