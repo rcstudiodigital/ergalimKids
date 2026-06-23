@@ -1,23 +1,28 @@
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import QRCode from 'qrcode'
 
 /**
- * Gera o QR Code localmente (no navegador), sem depender de site externo.
- * Usa preto/branco puro e margem adequada para máxima compatibilidade
- * com os leitores dos apps de banco.
+ * Gera o QR Code localmente como imagem PNG (melhor qualidade e leitura
+ * que canvas em celulares). Preto/branco puro e margem adequada.
  */
-export default function QrCode({ value, size = 240 }: { value: string; size?: number }) {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+export default function QrCode({ value, size = 256 }: { value: string; size?: number }) {
+  const [dataUrl, setDataUrl] = useState<string>('')
 
   useEffect(() => {
-    if (!canvasRef.current || !value) return
-    QRCode.toCanvas(canvasRef.current, value, {
+    if (!value) return
+    QRCode.toDataURL(value, {
       width: size,
-      margin: 4,                          // zona de silêncio padrão (apps exigem)
-      color: { dark: '#000000', light: '#FFFFFF' },  // preto/branco puro (leitura confiável)
-      errorCorrectionLevel: 'M',
-    }).catch((e) => { console.error('Erro ao gerar QR:', e) })
+      margin: 4,
+      color: { dark: '#000000', light: '#FFFFFF' },
+      errorCorrectionLevel: 'H',   // correção alta = mais robusto à leitura
+    })
+      .then(setDataUrl)
+      .catch((e) => console.error('Erro ao gerar QR:', e))
   }, [value, size])
 
-  return <canvas ref={canvasRef} className="mx-auto" width={size} height={size}/>
+  if (!dataUrl) {
+    return <div style={{ width: size, height: size }} className="mx-auto bg-gray-100 animate-pulse rounded"/>
+  }
+
+  return <img src={dataUrl} alt="QR Code Pix" width={size} height={size} className="mx-auto" style={{ imageRendering: 'pixelated' }}/>
 }
