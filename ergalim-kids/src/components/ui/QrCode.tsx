@@ -3,20 +3,21 @@ import QRCode from 'qrcode'
 
 /**
  * Gera o QR Code localmente (no navegador), sem depender de site externo.
- * Mais seguro e profissional: os dados do PIX nunca saem do dispositivo.
+ * Usa preto/branco puro e margem adequada para máxima compatibilidade
+ * com os leitores dos apps de banco.
  */
-export default function QrCode({ value, size = 208 }: { value: string; size?: number }) {
+export default function QrCode({ value, size = 240 }: { value: string; size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
     if (!canvasRef.current || !value) return
     QRCode.toCanvas(canvasRef.current, value, {
       width: size,
-      margin: 1,
-      color: { dark: '#1C2444', light: '#FFFFFF' },
+      margin: 4,                          // zona de silêncio padrão (apps exigem)
+      color: { dark: '#000000', light: '#FFFFFF' },  // preto/branco puro (leitura confiável)
       errorCorrectionLevel: 'M',
-    }).catch(() => { /* se falhar, o canvas fica vazio (o copia-e-cola ainda funciona) */ })
+    }).catch((e) => { console.error('Erro ao gerar QR:', e) })
   }, [value, size])
 
-  return <canvas ref={canvasRef} className="mx-auto rounded-lg" width={size} height={size}/>
+  return <canvas ref={canvasRef} className="mx-auto" width={size} height={size}/>
 }

@@ -74,7 +74,7 @@ export function generatePixCode(params: PixParams): string {
   const pixKey = formatKey(key, keyType)
   const name = sanitize(holderName || 'ERGALIM KIDS', 25)
   const merchantCity = sanitize(city || 'PETROPOLIS', 15)
-  const reference = sanitize(txid || '***', 25) || '***'
+  const reference = '***'   // referência universal (mais compatível que txid customizado)
 
   // Merchant Account Information (GUI do PIX + chave)
   const gui = emv('00', 'br.gov.bcb.pix')
