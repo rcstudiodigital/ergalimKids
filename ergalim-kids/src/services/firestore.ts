@@ -11,7 +11,7 @@
 import {
   collection, doc, getDocs, getDoc, addDoc, setDoc,
   updateDoc, deleteDoc, onSnapshot, query, orderBy,
-  serverTimestamp, Unsubscribe
+  serverTimestamp, deleteField, Unsubscribe
 } from 'firebase/firestore'
 import { db, ensureAuth } from '@/lib/firebase'
 import type { Product, Order, SiteSettings, Coupon, CustomerProfile, Feedback } from '@/types'
@@ -52,7 +52,13 @@ export async function fbAddProduct(p: Omit<Product, 'id'>): Promise<string> {
 
 export async function fbUpdateProduct(id: string, p: Partial<Product>) {
   await ensureAuth()
-  await updateDoc(doc(db, 'products', id), clean({ ...p, updatedAt: serverTimestamp() }))
+  const data: any = clean({ ...p, updatedAt: serverTimestamp() })
+  // Se a promoção foi removida (originalPrice vazio), apaga o campo no banco
+  // (o clean() removeria o undefined, deixando o valor antigo gravado).
+  if (p.originalPrice === undefined || p.originalPrice === null || (p as any).originalPrice === 0) {
+    data.originalPrice = deleteField()
+  }
+  await updateDoc(doc(db, 'products', id), data)
 }
 
 export async function fbDeleteProduct(id: string) {

@@ -37,13 +37,20 @@ export default function OwnerProducts() {
 
   const openEdit = (p: Product) => {
     setEdit(p)
+    // Se o produto está em promoção (tem originalPrice), converte de volta:
+    // no banco price=promocional e originalPrice=normal. No form mostramos
+    // price=normal (o cheio) e promoPrice=promocional.
+    const emPromocao = p.originalPrice !== undefined && p.originalPrice > p.price
     setForm({
-      name: p.name, description: p.description, price: p.price,
-      originalPrice: p.originalPrice, images: [...p.images],
+      name: p.name, description: p.description,
+      price: emPromocao ? (p.originalPrice as number) : p.price,
+      originalPrice: emPromocao ? p.originalPrice : undefined,
+      promoPrice: emPromocao ? p.price : undefined,
+      images: [...p.images],
       category: p.category, subcategory: p.subcategory || '',
       variants: p.variants.map(v => ({...v})),
       tags: [...p.tags], featured: p.featured, active: p.active,
-    })
+    } as any)
     setActiveTab('info')
     setShowForm(true)
   }
@@ -60,12 +67,27 @@ export default function OwnerProducts() {
       setActiveTab('variants'); return
     }
 
+    // Converter promoção para o modelo real (price = o que paga, originalPrice = riscado)
+    // form.price = preço normal digitado; (form as any).promoPrice = preço com desconto
+    const emPromocao = form.originalPrice !== undefined
+    const promoPrice = (form as any).promoPrice
+    let finalPrice = form.price
+    let finalOriginal: number | undefined = undefined
+
+    if (emPromocao && promoPrice && promoPrice > 0 && promoPrice < form.price) {
+      finalPrice = promoPrice        // cliente paga o promocional
+      finalOriginal = form.price     // preço normal vira o "de" (riscado)
+    }
+
     // Limpar imagens e variantes vazias
     const cleanForm = {
       ...form,
+      price: finalPrice,
+      originalPrice: finalOriginal,
       images: form.images.filter(im => im.trim()),
       variants: validVariants,
     }
+    delete (cleanForm as any).promoPrice  // campo auxiliar, não vai pro banco
 
     if (editProduct) {
       updateProduct({ ...editProduct, ...cleanForm, updatedAt: new Date().toISOString() })
@@ -119,7 +141,7 @@ export default function OwnerProducts() {
                 </button> ))}
             </div> <div className="p-5 overflow-y-auto flex-1"> {/* ── INFORMAÇÕES ──────────────────────────────────────── */}
               {activeTab === 'info' && (
-                <div className="space-y-4"> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Nome do produto *</label> <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} className="input-field" placeholder="Ex: Conjunto Moletom Feminino Rosa"/> </div> <div className="grid grid-cols-2 gap-3"> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Preço (R$) *</label> <input type="number" step="0.01" min="0" value={form.price||''} onChange={e => setForm(f=>({...f,price:parseFloat(e.target.value)||0}))} className="input-field" placeholder="189,90"/> </div> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Preço original (R$)</label> <input type="number" step="0.01" min="0" value={form.originalPrice||''} onChange={e => setForm(f=>({...f,originalPrice:parseFloat(e.target.value)||undefined}))} className="input-field" placeholder="239,90 (opcional)"/> </div> </div> <div className="grid grid-cols-2 gap-3"> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Categoria *</label> <select value={form.category} onChange={e => setForm(f=>({...f,category:e.target.value as any}))} className="input-field"> <option value="Feminino">Feminino</option><option value="Masculino">Masculino</option><option value="Unissex">Conjuntos</option> </select> </div> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Subcategoria</label> <input value={form.subcategory} onChange={e => setForm(f=>({...f,subcategory:e.target.value}))} className="input-field" placeholder="Ex: Conjuntos, Moletons..."/> </div> </div> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Descrição</label> <textarea value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} rows={4} className="input-field resize-none" placeholder="Descreva o produto detalhadamente..."/> </div> <div className="flex items-center gap-5"> <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-700"> <input type="checkbox" checked={form.featured} onChange={e => setForm(f=>({...f,featured:e.target.checked}))} className="rounded accent-pink w-4 h-4"/> Produto em destaque
+                <div className="space-y-4"> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Nome do produto *</label> <input value={form.name} onChange={e => setForm(f=>({...f,name:e.target.value}))} className="input-field" placeholder="Ex: Conjunto Moletom Feminino Rosa"/> </div> <div className="grid grid-cols-2 gap-3"> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Preço normal (R$) *</label> <input type="number" step="0.01" min="0" value={form.price||''} onChange={e => setForm(f=>({...f,price:parseFloat(e.target.value)||0}))} className="input-field" placeholder="189,90"/> </div> <div> <label className="text-xs font-bold text-gray-500 block mb-1 flex items-center gap-2"><input type="checkbox" checked={form.originalPrice !== undefined} onChange={e => setForm(f=>({...f, originalPrice: e.target.checked ? f.price : undefined, promoPrice: e.target.checked ? (f as any).promoPrice : undefined}))} className="rounded accent-pink w-4 h-4"/> Em promoção</label> {form.originalPrice !== undefined ? (<input type="number" step="0.01" min="0" value={(form as any).promoPrice||''} onChange={e => { const promo = parseFloat(e.target.value)||0; setForm(f=>({...f, promoPrice: promo} as any)) }} className="input-field border-pink-300" placeholder="Preço promocional (por)"/>) : (<p className="text-2xs text-gray-400 mt-2">Marque para fazer uma promoção</p>)} </div> </div> <div className="grid grid-cols-2 gap-3"> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Categoria *</label> <select value={form.category} onChange={e => setForm(f=>({...f,category:e.target.value as any}))} className="input-field"> <option value="Feminino">Feminino</option><option value="Masculino">Masculino</option><option value="Unissex">Conjuntos</option> </select> </div> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Subcategoria</label> <input value={form.subcategory} onChange={e => setForm(f=>({...f,subcategory:e.target.value}))} className="input-field" placeholder="Ex: Conjuntos, Moletons..."/> </div> </div> <div> <label className="text-xs font-bold text-gray-500 block mb-1">Descrição</label> <textarea value={form.description} onChange={e => setForm(f=>({...f,description:e.target.value}))} rows={4} className="input-field resize-none" placeholder="Descreva o produto detalhadamente..."/> </div> <div className="flex items-center gap-5"> <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-700"> <input type="checkbox" checked={form.featured} onChange={e => setForm(f=>({...f,featured:e.target.checked}))} className="rounded accent-pink w-4 h-4"/> Produto em destaque
                     </label> <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-gray-700"> <input type="checkbox" checked={form.active} onChange={e => setForm(f=>({...f,active:e.target.checked}))} className="rounded accent-pink w-4 h-4"/> Produto ativo (visível na loja)
                     </label> </div> </div> )}
 
