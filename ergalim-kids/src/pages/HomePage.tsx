@@ -162,11 +162,21 @@ const FILTERS = [
 ]
 
 function ProductShowcase() {
-  const { products } = useStore()
+  const { products, loading } = useStore()
   const [filter, setFilter] = useState('all')
 
   const active = products.filter(p => p.active)
   const shown = filter === 'all' ? active : active.filter(p => p.category === filter)
+
+  // Enquanto carrega do banco, mostra um indicador (evita "piscar" vazio)
+  if (loading) {
+    return (
+      <section className="py-12 px-4 sm:px-6 max-w-7xl mx-auto text-center">
+        <div className="inline-block w-8 h-8 border-2 border-brand-pink border-t-transparent rounded-full animate-spin"/>
+        <p className="text-sm text-gray-400 mt-3 font-medium">Carregando produtos...</p>
+      </section>
+    )
+  }
 
   if (active.length === 0) return null
 

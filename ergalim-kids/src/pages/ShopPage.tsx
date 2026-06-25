@@ -34,7 +34,7 @@ function ProductCard({ product }: { product: any }) {
 }
 
 export default function ShopPage() {
-  const { products } = useStore()
+  const { products, loading } = useStore()
   const [params] = useSearchParams()
   const [sort, setSort] = useState('featured')
   const q = params.get('q') || ''
@@ -77,7 +77,12 @@ export default function ShopPage() {
         ))}
       </div>
 
-      {filtered.length === 0 ? (
+      {loading ? (
+        <div className="text-center py-20">
+          <div className="inline-block w-8 h-8 border-2 border-brand-pink border-t-transparent rounded-full animate-spin"/>
+          <p className="text-sm text-gray-400 mt-3 font-medium">Carregando produtos...</p>
+        </div>
+      ) : filtered.length === 0 ? (
         <div className="text-center py-20 text-gray-400">
           <ShoppingBag size={40} className="mx-auto mb-4 opacity-30" />
           <p className="text-lg font-bold mb-2">Nenhum produto encontrado</p>

@@ -36,7 +36,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: from || process.env.EMAIL_FROM || 'Ergalim Kids <onboarding@resend.dev>',
+        from: from || process.env.EMAIL_FROM || 'Ergalim Kids <contato@ergalimkids.com>',
         to: recipients,
         subject,
         html,

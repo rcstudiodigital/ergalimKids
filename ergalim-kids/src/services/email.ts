@@ -15,6 +15,9 @@
  */
 
 const STORE_EMAIL = import.meta.env.VITE_STORE_EMAIL    || 'contato@ergalimkids.com.br'
+// E-mail do dono (Gabriel) — usado para avisos de pedido/feedback.
+// Usa o mesmo e-mail do login do dono; cai no STORE_EMAIL se não definido.
+const OWNER_EMAIL = import.meta.env.VITE_OWNER_EMAIL || STORE_EMAIL
 const STORE_NAME  = 'Ergalim Kids'
 const IS_DEV      = import.meta.env.DEV
 
@@ -170,7 +173,7 @@ export async function sendNewOrderToOwner(order: {
     </div>
     <a href="https://ergalimkids.vercel.app/owner/orders" class="btn">Ver no painel da loja</a>`)
 
-  return sendEmail({ to: STORE_EMAIL, subject: `🆕 Novo pedido ${order.id} — R$ ${order.total.toFixed(2).replace('.', ',')}`, html })
+  return sendEmail({ to: OWNER_EMAIL, subject: `🆕 Novo pedido ${order.id} — R$ ${order.total.toFixed(2).replace('.', ',')}`, html })
 }
 
 // 2b. Feedback do cliente → para o DONO DA LOJA
@@ -194,7 +197,7 @@ export async function sendFeedbackToOwner(data: {
     ${data.comment ? `<p><strong>Comentário:</strong></p><div class="box"><p style="margin:0;font-size:14px;font-style:italic;">"${data.comment}"</p></div>` : '<p style="color:#888;font-size:13px;">(Sem comentário)</p>'}
     <a href="https://ergalimkids.com/admin/feedbacks" class="btn">Ver todos os feedbacks</a>`)
 
-  return sendEmail({ to: STORE_EMAIL, subject: `⭐ Novo feedback (${data.rating}/5) de ${data.customerName}`, html })
+  return sendEmail({ to: OWNER_EMAIL, subject: `⭐ Novo feedback (${data.rating}/5) de ${data.customerName}`, html })
 }
 
 // 3. Pedido enviado → para o CLIENTE

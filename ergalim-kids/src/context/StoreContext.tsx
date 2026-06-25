@@ -27,6 +27,7 @@ interface StoreContextType {
   ownerPermissions:   OwnerPermissions
   coupons:            Coupon[]
   firebaseEnabled:    boolean
+  loading:            boolean
   addProduct:         (p: Omit<Product,'id'|'createdAt'|'updatedAt'>) => Promise<void>
   updateProduct:      (p: Product) => Promise<void>
   deleteProduct:      (id: string) => Promise<void>
@@ -53,11 +54,14 @@ function save(key: string, v: unknown) {
 }
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [products,         setProducts]         = useState<Product[]>(() => load('ek_products', INITIAL_PRODUCTS))
-  const [orders,           setOrders]           = useState<Order[]>(() => load('ek_orders', INITIAL_ORDERS))
+  // Quando o Firebase está ATIVO, começamos com listas vazias e esperamos os
+  // dados frescos do banco (evita mostrar cache velho do localStorage no celular).
+  // O localStorage só é usado como fallback quando o Firebase está desligado.
+  const [products,         setProducts]         = useState<Product[]>(() => FIREBASE_ENABLED ? [] : load('ek_products', INITIAL_PRODUCTS))
+  const [orders,           setOrders]           = useState<Order[]>(() => FIREBASE_ENABLED ? [] : load('ek_orders', INITIAL_ORDERS))
   const [settings,         setSettings]         = useState<SiteSettings>(() => ({ ...DEFAULT_SETTINGS, ...load('ek_settings', {}) }))
   const [ownerPermissions, setOwnerPermissions] = useState<OwnerPermissions>(() => load('ek_permissions', DEFAULT_OWNER_PERMISSIONS))
-  const [coupons,          setCoupons]          = useState<Coupon[]>(() => load('ek_coupons', INITIAL_COUPONS))
+  const [coupons,          setCoupons]          = useState<Coupon[]>(() => FIREBASE_ENABLED ? [] : load('ek_coupons', INITIAL_COUPONS))
   const [fbLoaded,         setFbLoaded]         = useState(!FIREBASE_ENABLED)
 
   // ── Firebase: watch em tempo real de tudo ──────────────────────────────
@@ -259,6 +263,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     <StoreContext.Provider value={{
       products, orders, settings, ownerPermissions, coupons,
       firebaseEnabled: FIREBASE_ENABLED,
+      loading: !fbLoaded,
       addProduct, updateProduct, deleteProduct,
       addOrder, updateOrder,
       updateSettings, updateOwnerPermissions,
